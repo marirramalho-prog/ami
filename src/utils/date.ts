@@ -29,3 +29,10 @@ export function calcularIdade({ dia, mes, ano }: DatePart): number | null {
   if (aindaNaoFezAniversario) idade -= 1;
   return idade >= 0 ? idade : null;
 }
+
+export function todayKey(): string {
+  const hoje = new Date();
+  const mm = String(hoje.getMonth() + 1).padStart(2, '0');
+  const dd = String(hoje.getDate()).padStart(2, '0');
+  return `${hoje.getFullYear()}-${mm}-${dd}`;
+}

@@ -49,3 +49,19 @@ export async function cancelReminder(notificationId: string | null): Promise<voi
   if (Platform.OS === 'web' || !notificationId) return;
   await Notifications.cancelScheduledNotificationAsync(notificationId);
 }
+
+export async function scheduleDailyReminder(
+  hour: number,
+  minute: number,
+  title: string,
+  body: string,
+): Promise<string | null> {
+  if (Platform.OS === 'web') return null;
+
+  const id = await Notifications.scheduleNotificationAsync({
+    content: { title, body },
+    trigger: { type: Notifications.SchedulableTriggerInputTypes.DAILY, hour, minute },
+  });
+
+  return id;
+}
