@@ -88,7 +88,8 @@ async function handleGenerateStory(req, res) {
       }
 
       const data = await response.json();
-      const texto = data.content?.[0]?.text || '';
+      const textBlock = (data.content || []).find((block) => block.type === 'text');
+      const texto = textBlock?.text || '';
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ texto }));
     } catch (err) {
