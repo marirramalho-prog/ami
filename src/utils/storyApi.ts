@@ -1,9 +1,12 @@
+import { Platform } from 'react-native';
 import { StoryPreferences } from '../types/story';
 
-// Ao testar no celular via Expo Go, troque para o IP da sua máquina na rede
-// local (ex: http://192.168.0.10:4001), já que "localhost" no celular aponta
-// para o próprio celular, não para o computador rodando o servidor.
-const STORY_SERVER_URL = 'http://localhost:4001';
+// No navegador (web), "localhost" já aponta pro computador que roda o
+// servidor. No celular via Expo Go, "localhost" apontaria pro próprio
+// celular — por isso usamos o IP da máquina na rede Wi-Fi local.
+// Se esse IP mudar (rede diferente, reinício do roteador), atualize aqui.
+const LAN_IP = '192.168.15.26';
+const STORY_SERVER_URL = Platform.OS === 'web' ? 'http://localhost:4001' : `http://${LAN_IP}:4001`;
 
 interface GenerateStoryParams extends StoryPreferences {
   eventoContexto?: string;
