@@ -1,7 +1,18 @@
+export type Turno = 'manha' | 'tarde' | 'integral' | '';
+
 export interface Child {
   id: string;
   nome: string;
-  idade: string;
+  dataNascimento: {
+    dia: string;
+    mes: string;
+    ano: string;
+  };
+  avatar: string;
   escola: string;
-  interesses: string;
+  turnoEscolar: Turno;
+  atividades: string[];
+  responsaveisBusca: string[];
+  interesses: string[];
+  observacoes: string;
 }
