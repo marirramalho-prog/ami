@@ -9,10 +9,12 @@ import ChecklistScreen from '../screens/ChecklistScreen';
 import DiscoverScreen from '../screens/DiscoverScreen';
 import StoriesScreen from '../screens/StoriesScreen';
 import SleepScreen from '../screens/SleepScreen';
+import AssistantScreen from '../screens/AssistantScreen';
 
 const Tab = createBottomTabNavigator();
 
 const ICONS: Record<string, string> = {
+  Lumi: '🧚',
   Perfis: '👶',
   Agenda: '🗓️',
   Checklist: '✅',
@@ -33,6 +35,7 @@ export default function RootNavigator() {
           tabBarIcon: () => <Text style={{ fontSize: 18 }}>{ICONS[route.name]}</Text>,
         })}
       >
+        <Tab.Screen name="Lumi" component={AssistantScreen} />
         <Tab.Screen name="Perfis" component={ChildrenProfileScreen} />
         <Tab.Screen name="Agenda" component={AgendaScreen} />
         <Tab.Screen name="Checklist" component={ChecklistScreen} />
