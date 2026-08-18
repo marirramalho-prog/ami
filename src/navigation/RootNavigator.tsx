@@ -7,6 +7,7 @@ import ChildrenProfileScreen from '../screens/ChildrenProfileScreen';
 import AgendaScreen from '../screens/AgendaScreen';
 import ChecklistScreen from '../screens/ChecklistScreen';
 import DiscoverScreen from '../screens/DiscoverScreen';
+import StoriesScreen from '../screens/StoriesScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -15,6 +16,7 @@ const ICONS: Record<string, string> = {
   Agenda: '🗓️',
   Checklist: '✅',
   Descobrir: '🔍',
+  Histórias: '📖',
 };
 
 export default function RootNavigator() {
@@ -33,6 +35,7 @@ export default function RootNavigator() {
         <Tab.Screen name="Agenda" component={AgendaScreen} />
         <Tab.Screen name="Checklist" component={ChecklistScreen} />
         <Tab.Screen name="Descobrir" component={DiscoverScreen} />
+        <Tab.Screen name="Histórias" component={StoriesScreen} />
       </Tab.Navigator>
     </NavigationContainer>
   );
