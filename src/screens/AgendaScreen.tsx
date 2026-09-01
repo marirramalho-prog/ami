@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -11,14 +11,18 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { colors } from '../theme/colors';
 import { Child } from '../types/child';
+import { Caregiver } from '../types/caregiver';
 import { AgendaEvent } from '../types/routine';
 import { loadChildren } from '../storage/childrenStorage';
+import { loadCaregivers } from '../storage/caregiverStorage';
 import { loadEvents, saveEvents } from '../storage/routineStorage';
 import { isValidDatePart } from '../utils/date';
 import { ensurePermission, scheduleReminder, cancelReminder } from '../utils/notifications';
 import ChildSelector from '../components/ChildSelector';
+import CaregiverSelector from '../components/CaregiverSelector';
 
 const emptyForm = {
   titulo: '',
@@ -27,18 +31,23 @@ const emptyForm = {
   ano: '',
   hora: '',
   childId: null as string | null,
+  caregiverId: null as string | null,
   lembrete: false,
 };
 
 export default function AgendaScreen() {
   const [children, setChildren] = useState<Child[]>([]);
+  const [caregivers, setCaregivers] = useState<Caregiver[]>([]);
   const [events, setEvents] = useState<AgendaEvent[]>([]);
   const [form, setForm] = useState(emptyForm);
 
-  useEffect(() => {
-    loadChildren().then(setChildren);
-    loadEvents().then(setEvents);
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadChildren().then(setChildren);
+      loadCaregivers().then(setCaregivers);
+      loadEvents().then(setEvents);
+    }, []),
+  );
 
   function updateForm<K extends keyof typeof emptyForm>(key: K, value: (typeof emptyForm)[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -64,6 +73,7 @@ export default function AgendaScreen() {
       data: { dia: form.dia.trim(), mes: form.mes.trim(), ano: form.ano.trim() },
       hora: form.hora.trim(),
       childId: form.childId,
+      caregiverId: form.caregiverId,
       lembrete: form.lembrete,
       notificationId: null,
     };
@@ -159,6 +169,12 @@ export default function AgendaScreen() {
             onChange={(v) => updateForm('childId', v)}
           />
 
+          <CaregiverSelector
+            caregivers={caregivers}
+            value={form.caregiverId}
+            onChange={(v) => updateForm('caregiverId', v)}
+          />
+
           <View style={styles.switchRow}>
             <Text style={styles.label}>Lembrete por notificação push</Text>
             <Switch value={form.lembrete} onValueChange={handleToggleLembrete} />
@@ -186,6 +202,7 @@ export default function AgendaScreen() {
           contentContainerStyle={styles.list}
           renderItem={({ item }) => {
             const child = children.find((c) => c.id === item.childId);
+            const caregiver = caregivers.find((c) => c.id === item.caregiverId);
             return (
               <View style={styles.card}>
                 <View style={{ flex: 1 }}>
@@ -194,6 +211,7 @@ export default function AgendaScreen() {
                     {item.data.dia}/{item.data.mes}/{item.data.ano}
                     {item.hora ? ` às ${item.hora}` : ''}
                     {child ? ` · ${child.avatar} ${child.nome}` : ''}
+                    {caregiver ? ` · 👤 ${caregiver.nomeCompleto}` : ''}
                     {item.lembrete ? ' · 🔔' : ''}
                   </Text>
                 </View>

@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { colors } from '../theme/colors';
 import ChildrenProfileScreen from '../screens/ChildrenProfileScreen';
+import CaregiversScreen from '../screens/CaregiversScreen';
 import AgendaScreen from '../screens/AgendaScreen';
 import ChecklistScreen from '../screens/ChecklistScreen';
 import DiscoverScreen from '../screens/DiscoverScreen';
@@ -16,6 +17,7 @@ const Tab = createBottomTabNavigator();
 const ICONS: Record<string, string> = {
   Lumi: '🧚',
   Perfis: '👶',
+  Cuidadores: '🧑‍🤝‍🧑',
   Agenda: '🗓️',
   Checklist: '✅',
   Descobrir: '🔍',
@@ -37,6 +39,7 @@ export default function RootNavigator() {
       >
         <Tab.Screen name="Lumi" component={AssistantScreen} />
         <Tab.Screen name="Perfis" component={ChildrenProfileScreen} />
+        <Tab.Screen name="Cuidadores" component={CaregiversScreen} />
         <Tab.Screen name="Agenda" component={AgendaScreen} />
         <Tab.Screen name="Checklist" component={ChecklistScreen} />
         <Tab.Screen name="Descobrir" component={DiscoverScreen} />
