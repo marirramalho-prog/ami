@@ -7,4 +7,6 @@ export interface Caregiver {
     ano: string;
   };
   relacao: string;
+  celular: string;
+  email: string;
 }

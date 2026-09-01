@@ -25,6 +25,8 @@ const emptyForm = {
   mes: '',
   ano: '',
   relacao: '',
+  celular: '',
+  email: '',
 };
 
 export default function CaregiversScreen() {
@@ -50,6 +52,8 @@ export default function CaregiversScreen() {
       nomeCompleto: form.nomeCompleto.trim(),
       dataNascimento: { dia: form.dia.trim(), mes: form.mes.trim(), ano: form.ano.trim() },
       relacao: form.relacao,
+      celular: form.celular.trim(),
+      email: form.email.trim(),
     };
 
     const updated = [...caregivers, caregiver];
@@ -130,6 +134,25 @@ export default function CaregiversScreen() {
             customPlaceholder="Ou digite outra relação"
           />
 
+          <TextInput
+            style={styles.input}
+            placeholder="Celular"
+            placeholderTextColor={colors.textMuted}
+            value={form.celular}
+            onChangeText={(v) => updateForm('celular', v)}
+            keyboardType="phone-pad"
+          />
+
+          <TextInput
+            style={styles.input}
+            placeholder="E-mail"
+            placeholderTextColor={colors.textMuted}
+            value={form.email}
+            onChangeText={(v) => updateForm('email', v)}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+
           <Pressable
             style={[styles.button, !podeAdicionar && styles.buttonDisabled]}
             onPress={handleAdd}
@@ -153,6 +176,11 @@ export default function CaregiversScreen() {
                   <Text style={styles.cardDetail}>
                     {[item.relacao, idade !== null && `${idade} anos`].filter(Boolean).join(' · ')}
                   </Text>
+                  {(item.celular || item.email) && (
+                    <Text style={styles.cardDetail}>
+                      {[item.celular, item.email].filter(Boolean).join(' · ')}
+                    </Text>
+                  )}
                 </View>
                 <Pressable onPress={() => handleRemove(item.id)}>
                   <Text style={styles.remove}>remover</Text>
