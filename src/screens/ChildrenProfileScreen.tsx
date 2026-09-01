@@ -14,14 +14,14 @@ import { useFocusEffect } from '@react-navigation/native';
 import { colors } from '../theme/colors';
 import { Child, childFullName, Turno } from '../types/child';
 import { Caregiver } from '../types/caregiver';
-import { AtividadeExtracurricular, criarRotinaVazia } from '../types/weeklyRoutine';
+import { AtividadeExtracurricular, criarResponsavelEscolaVazio } from '../types/weeklyRoutine';
 import { loadChildren, saveChildren } from '../storage/childrenStorage';
 import { loadCaregivers } from '../storage/caregiverStorage';
 import { calcularIdade, isValidDatePart } from '../utils/date';
 import TagInput from '../components/TagInput';
 import AvatarPicker, { AVATAR_OPTIONS } from '../components/AvatarPicker';
 import TurnoSelector from '../components/TurnoSelector';
-import RotinaSemanal from '../components/RotinaSemanal';
+import ResponsavelEscolaSelector from '../components/ResponsavelEscolaSelector';
 import AtividadesEditor from '../components/AtividadesEditor';
 
 const TURNO_LABEL: Record<Exclude<Turno, ''>, string> = {
@@ -40,7 +40,7 @@ const emptyForm = {
   escola: '',
   naoVaiEscola: false,
   turnoEscolar: '' as Turno,
-  rotinaEscola: criarRotinaVazia(),
+  responsavelEscola: criarResponsavelEscolaVazio(),
   atividades: [] as AtividadeExtracurricular[],
   interesses: [] as string[],
   observacoes: '',
@@ -80,7 +80,7 @@ export default function ChildrenProfileScreen() {
       escola: form.escola.trim(),
       naoVaiEscola: form.naoVaiEscola,
       turnoEscolar: form.turnoEscolar,
-      rotinaEscola: form.rotinaEscola,
+      responsavelEscola: form.responsavelEscola,
       atividades: form.atividades,
       interesses: form.interesses,
       observacoes: form.observacoes.trim(),
@@ -201,12 +201,10 @@ export default function ChildrenProfileScreen() {
                 value={form.turnoEscolar}
                 onChange={(v) => updateForm('turnoEscolar', v)}
               />
-              <RotinaSemanal
-                titulo="Escola"
-                icone="🏫"
+              <ResponsavelEscolaSelector
                 cuidadores={caregivers}
-                value={form.rotinaEscola}
-                onChange={(v) => updateForm('rotinaEscola', v)}
+                value={form.responsavelEscola}
+                onChange={(v) => updateForm('responsavelEscola', v)}
               />
             </>
           )}

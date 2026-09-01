@@ -28,6 +28,15 @@ export function criarRotinaVazia(): WeeklyRoutine {
   return dias;
 }
 
+export interface ResponsavelEscola {
+  leva: string | null;
+  busca: string | null;
+}
+
+export function criarResponsavelEscolaVazio(): ResponsavelEscola {
+  return { leva: null, busca: null };
+}
+
 export interface AtividadeExtracurricular {
   id: string;
   nome: string;

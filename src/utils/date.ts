@@ -11,7 +11,9 @@ export function isValidDatePart({ dia, mes, ano }: DatePart): boolean {
   if (!d || !m || !y) return false;
   if (m < 1 || m > 12) return false;
   if (d < 1 || d > 31) return false;
-  if (y < 1990 || y > new Date().getFullYear()) return false;
+  // Limite bem folgado (não só filhos usam essa validação — cuidadores como
+  // avós podem ter nascido bem antes de 1990).
+  if (y < 1900 || y > new Date().getFullYear()) return false;
   return true;
 }
 

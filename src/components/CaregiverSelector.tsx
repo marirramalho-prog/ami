@@ -7,9 +7,15 @@ interface Props {
   caregivers: Caregiver[];
   value: string | null;
   onChange: (caregiverId: string | null) => void;
+  label?: string;
 }
 
-export default function CaregiverSelector({ caregivers, value, onChange }: Props) {
+export default function CaregiverSelector({
+  caregivers,
+  value,
+  onChange,
+  label = 'Responsável (opcional)',
+}: Props) {
   if (caregivers.length === 0) {
     return (
       <Text style={styles.empty}>
@@ -20,7 +26,7 @@ export default function CaregiverSelector({ caregivers, value, onChange }: Props
 
   return (
     <View style={{ gap: 8 }}>
-      <Text style={styles.label}>Responsável (opcional)</Text>
+      <Text style={styles.label}>{label}</Text>
       <View style={styles.row}>
         <Pressable
           style={[styles.chip, value === null && styles.chipSelected]}

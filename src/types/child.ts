@@ -1,4 +1,4 @@
-import { AtividadeExtracurricular, WeeklyRoutine } from './weeklyRoutine';
+import { AtividadeExtracurricular, ResponsavelEscola } from './weeklyRoutine';
 
 export type Turno = 'manha' | 'tarde' | 'integral' | '';
 
@@ -15,7 +15,7 @@ export interface Child {
   escola: string;
   naoVaiEscola: boolean;
   turnoEscolar: Turno;
-  rotinaEscola: WeeklyRoutine;
+  responsavelEscola: ResponsavelEscola;
   atividades: AtividadeExtracurricular[];
   interesses: string[];
   observacoes: string;
