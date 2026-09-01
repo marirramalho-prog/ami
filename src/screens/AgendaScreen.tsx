@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { colors } from '../theme/colors';
-import { Child } from '../types/child';
+import { Child, childFullName } from '../types/child';
 import { Caregiver } from '../types/caregiver';
 import { AgendaEvent } from '../types/routine';
 import { loadChildren } from '../storage/childrenStorage';
@@ -210,7 +210,7 @@ export default function AgendaScreen() {
                   <Text style={styles.cardDetail}>
                     {item.data.dia}/{item.data.mes}/{item.data.ano}
                     {item.hora ? ` às ${item.hora}` : ''}
-                    {child ? ` · ${child.avatar} ${child.nome}` : ''}
+                    {child ? ` · ${child.avatar} ${childFullName(child)}` : ''}
                     {caregiver ? ` · 👤 ${caregiver.nomeCompleto}` : ''}
                     {item.lembrete ? ' · 🔔' : ''}
                   </Text>

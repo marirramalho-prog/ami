@@ -1,0 +1,31 @@
+// Lista de sugestão pra evitar erro de digitação/português ao cadastrar
+// atividades extracurriculares — a mãe digita e escolhe da lista, em vez
+// de escrever tudo livre.
+export const ATIVIDADES_SUGERIDAS = [
+  'Natação',
+  'Ballet',
+  'Futebol',
+  'Judô',
+  'Karatê',
+  'Jiu-Jitsu',
+  'Inglês',
+  'Espanhol',
+  'Música',
+  'Piano',
+  'Violão',
+  'Canto',
+  'Artes',
+  'Pintura',
+  'Teatro',
+  'Xadrez',
+  'Patinação',
+  'Ginástica',
+  'Vôlei',
+  'Basquete',
+  'Tênis',
+  'Robótica',
+  'Programação',
+  'Dança',
+  'Capoeira',
+  'Reforço escolar',
+];

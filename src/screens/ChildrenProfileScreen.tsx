@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -10,13 +10,19 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { colors } from '../theme/colors';
-import { Child, Turno } from '../types/child';
+import { Child, childFullName, Turno } from '../types/child';
+import { Caregiver } from '../types/caregiver';
+import { AtividadeExtracurricular, criarRotinaVazia } from '../types/weeklyRoutine';
 import { loadChildren, saveChildren } from '../storage/childrenStorage';
+import { loadCaregivers } from '../storage/caregiverStorage';
 import { calcularIdade, isValidDatePart } from '../utils/date';
 import TagInput from '../components/TagInput';
 import AvatarPicker, { AVATAR_OPTIONS } from '../components/AvatarPicker';
 import TurnoSelector from '../components/TurnoSelector';
+import RotinaSemanal from '../components/RotinaSemanal';
+import AtividadesEditor from '../components/AtividadesEditor';
 
 const TURNO_LABEL: Record<Exclude<Turno, ''>, string> = {
   manha: 'Manhã',
@@ -26,43 +32,56 @@ const TURNO_LABEL: Record<Exclude<Turno, ''>, string> = {
 
 const emptyForm = {
   nome: '',
+  sobrenome: '',
   dia: '',
   mes: '',
   ano: '',
   avatar: AVATAR_OPTIONS[0],
   escola: '',
+  naoVaiEscola: false,
   turnoEscolar: '' as Turno,
-  atividades: [] as string[],
-  responsaveisBusca: [] as string[],
+  rotinaEscola: criarRotinaVazia(),
+  atividades: [] as AtividadeExtracurricular[],
   interesses: [] as string[],
   observacoes: '',
 };
 
 export default function ChildrenProfileScreen() {
   const [children, setChildren] = useState<Child[]>([]);
+  const [caregivers, setCaregivers] = useState<Caregiver[]>([]);
   const [form, setForm] = useState(emptyForm);
 
-  useEffect(() => {
-    loadChildren().then(setChildren);
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadChildren().then(setChildren);
+      loadCaregivers().then(setCaregivers);
+    }, []),
+  );
 
   function updateForm<K extends keyof typeof emptyForm>(key: K, value: (typeof emptyForm)[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
+  function handleToggleNaoVaiEscola() {
+    setForm((prev) => ({ ...prev, naoVaiEscola: !prev.naoVaiEscola, escola: '' }));
+  }
+
   async function handleAdd() {
-    if (!form.nome.trim()) return;
+    if (!form.nome.trim() || !form.sobrenome.trim()) return;
     if (!isValidDatePart({ dia: form.dia, mes: form.mes, ano: form.ano })) return;
+    if (!form.naoVaiEscola && !form.escola.trim()) return;
 
     const newChild: Child = {
       id: Date.now().toString(),
       nome: form.nome.trim(),
+      sobrenome: form.sobrenome.trim(),
       dataNascimento: { dia: form.dia.trim(), mes: form.mes.trim(), ano: form.ano.trim() },
       avatar: form.avatar,
       escola: form.escola.trim(),
+      naoVaiEscola: form.naoVaiEscola,
       turnoEscolar: form.turnoEscolar,
+      rotinaEscola: form.rotinaEscola,
       atividades: form.atividades,
-      responsaveisBusca: form.responsaveisBusca,
       interesses: form.interesses,
       observacoes: form.observacoes.trim(),
     };
@@ -80,7 +99,11 @@ export default function ChildrenProfileScreen() {
   }
 
   const dataValida = isValidDatePart({ dia: form.dia, mes: form.mes, ano: form.ano });
-  const podeAdicionar = form.nome.trim().length > 0 && dataValida;
+  const podeAdicionar =
+    form.nome.trim().length > 0 &&
+    form.sobrenome.trim().length > 0 &&
+    dataValida &&
+    (form.naoVaiEscola || form.escola.trim().length > 0);
 
   return (
     <KeyboardAvoidingView
@@ -91,14 +114,24 @@ export default function ChildrenProfileScreen() {
         <Text style={styles.title}>Perfis dos filhos</Text>
 
         <View style={styles.form}>
-          <Text style={styles.sectionTitle}>Essenciais</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Nome ou apelido"
-            placeholderTextColor={colors.textMuted}
-            value={form.nome}
-            onChangeText={(v) => updateForm('nome', v)}
-          />
+          <Text style={styles.sectionTitle}>Campos obrigatórios</Text>
+
+          <View style={styles.nomeRow}>
+            <TextInput
+              style={[styles.input, { flex: 1 }]}
+              placeholder="Nome"
+              placeholderTextColor={colors.textMuted}
+              value={form.nome}
+              onChangeText={(v) => updateForm('nome', v)}
+            />
+            <TextInput
+              style={[styles.input, { flex: 1 }]}
+              placeholder="Sobrenome"
+              placeholderTextColor={colors.textMuted}
+              value={form.sobrenome}
+              onChangeText={(v) => updateForm('sobrenome', v)}
+            />
+          </View>
 
           <Text style={styles.label}>Data de nascimento</Text>
           <View style={styles.dateRow}>
@@ -139,28 +172,49 @@ export default function ChildrenProfileScreen() {
           <View style={styles.divider} />
           <Text style={styles.sectionTitle}>Contexto de rotina</Text>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Escola"
-            placeholderTextColor={colors.textMuted}
-            value={form.escola}
-            onChangeText={(v) => updateForm('escola', v)}
-          />
+          {!form.naoVaiEscola && (
+            <TextInput
+              style={styles.input}
+              placeholder="Escola"
+              placeholderTextColor={colors.textMuted}
+              value={form.escola}
+              onChangeText={(v) => updateForm('escola', v)}
+            />
+          )}
+          <Pressable
+            style={[styles.toggleChip, form.naoVaiEscola && styles.toggleChipSelected]}
+            onPress={handleToggleNaoVaiEscola}
+          >
+            <Text
+              style={[styles.toggleChipText, form.naoVaiEscola && styles.toggleChipTextSelected]}
+            >
+              Não vai à escola
+            </Text>
+          </Pressable>
+          {!form.naoVaiEscola && !form.escola.trim() && (
+            <Text style={styles.warning}>Informe a escola ou marque "Não vai à escola".</Text>
+          )}
 
-          <TurnoSelector value={form.turnoEscolar} onChange={(v) => updateForm('turnoEscolar', v)} />
+          {!form.naoVaiEscola && (
+            <>
+              <TurnoSelector
+                value={form.turnoEscolar}
+                onChange={(v) => updateForm('turnoEscolar', v)}
+              />
+              <RotinaSemanal
+                titulo="Escola"
+                icone="🏫"
+                cuidadores={caregivers}
+                value={form.rotinaEscola}
+                onChange={(v) => updateForm('rotinaEscola', v)}
+              />
+            </>
+          )}
 
-          <TagInput
-            label="Atividades extracurriculares"
-            placeholder="Ex: natação"
-            values={form.atividades}
+          <AtividadesEditor
+            value={form.atividades}
             onChange={(v) => updateForm('atividades', v)}
-          />
-
-          <TagInput
-            label="Responsáveis por buscar/levar"
-            placeholder="Ex: avó Marta"
-            values={form.responsaveisBusca}
-            onChange={(v) => updateForm('responsaveisBusca', v)}
+            cuidadores={caregivers}
           />
 
           <View style={styles.divider} />
@@ -203,14 +257,15 @@ export default function ChildrenProfileScreen() {
           renderItem={({ item }) => {
             const idade = calcularIdade(item.dataNascimento);
             const turnoLabel = item.turnoEscolar ? TURNO_LABEL[item.turnoEscolar] : '';
+            const escolaLabel = item.naoVaiEscola ? 'Não vai à escola' : item.escola;
             return (
               <View style={styles.card}>
                 <View style={styles.cardHeader}>
                   <Text style={styles.cardAvatar}>{item.avatar}</Text>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.cardName}>{item.nome}</Text>
+                    <Text style={styles.cardName}>{childFullName(item)}</Text>
                     <Text style={styles.cardDetail}>
-                      {[idade !== null && `${idade} anos`, item.escola, turnoLabel]
+                      {[idade !== null && `${idade} anos`, escolaLabel, turnoLabel]
                         .filter(Boolean)
                         .join(' · ')}
                     </Text>
@@ -221,15 +276,12 @@ export default function ChildrenProfileScreen() {
                 </View>
 
                 {item.atividades.length > 0 && (
-                  <Text style={styles.cardTags}>Atividades: {item.atividades.join(', ')}</Text>
+                  <Text style={styles.cardTags}>
+                    Atividades: {item.atividades.map((a) => a.nome).join(', ')}
+                  </Text>
                 )}
                 {item.interesses.length > 0 && (
                   <Text style={styles.cardTags}>Interesses: {item.interesses.join(', ')}</Text>
-                )}
-                {item.responsaveisBusca.length > 0 && (
-                  <Text style={styles.cardTags}>
-                    Busca/leva: {item.responsaveisBusca.join(', ')}
-                  </Text>
                 )}
                 {item.observacoes ? (
                   <Text style={styles.cardTags}>Obs: {item.observacoes}</Text>
@@ -300,6 +352,10 @@ const styles = StyleSheet.create({
     color: colors.text,
     backgroundColor: colors.brancoSuave,
   },
+  nomeRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
   textArea: {
     minHeight: 70,
     textAlignVertical: 'top',
@@ -320,6 +376,27 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#B5555A',
     marginTop: -4,
+  },
+  toggleChip: {
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    backgroundColor: colors.brancoSuave,
+  },
+  toggleChipSelected: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  toggleChipText: {
+    fontSize: 13,
+    color: colors.textMuted,
+  },
+  toggleChipTextSelected: {
+    color: colors.text,
+    fontWeight: '600',
   },
   button: {
     backgroundColor: colors.primary,

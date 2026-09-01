@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { colors } from '../theme/colors';
-import { Child } from '../types/child';
+import { Child, childFullName } from '../types/child';
 
 interface Props {
   children: Child[];
@@ -39,7 +39,7 @@ export default function ChildSelector({ children, value, onChange }: Props) {
               onPress={() => onChange(child.id)}
             >
               <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
-                {child.avatar} {child.nome}
+                {child.avatar} {childFullName(child)}
               </Text>
             </Pressable>
           );

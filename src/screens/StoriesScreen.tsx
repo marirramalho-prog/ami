@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -11,8 +11,9 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { colors } from '../theme/colors';
-import { Child } from '../types/child';
+import { Child, childFullName } from '../types/child';
 import { AgendaEvent } from '../types/routine';
 import {
   Arco,
@@ -75,12 +76,14 @@ export default function StoriesScreen() {
   const [erro, setErro] = useState('');
   const [historiaGerada, setHistoriaGerada] = useState<Story | null>(null);
 
-  useEffect(() => {
-    loadChildren().then(setChildren);
-    loadCharacters().then(setCustomCharacters);
-    loadEvents().then(setEvents);
-    loadStories().then(setStories);
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadChildren().then(setChildren);
+      loadCharacters().then(setCustomCharacters);
+      loadEvents().then(setEvents);
+      loadStories().then(setStories);
+    }, []),
+  );
 
   function updatePrefs<K extends keyof StoryPreferences>(key: K, value: StoryPreferences[K]) {
     setPrefs((prev) => ({ ...prev, [key]: value }));
@@ -165,11 +168,11 @@ export default function StoriesScreen() {
                   key={child.id}
                   style={[styles.chip, selected && styles.chipSelected]}
                   onPress={() =>
-                    togglePersonagem({ id: child.id, nome: child.nome, isChild: true })
+                    togglePersonagem({ id: child.id, nome: childFullName(child), isChild: true })
                   }
                 >
                   <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
-                    {child.avatar} {child.nome}
+                    {child.avatar} {childFullName(child)}
                   </Text>
                 </Pressable>
               );

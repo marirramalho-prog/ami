@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { colors } from '../theme/colors';
-import { Child } from '../types/child';
+import { Child, childFullName } from '../types/child';
 import { DailyLog, DuracaoSoneca, RitualStep, SleepSchedule, StatusNoite } from '../types/sleep';
 import { loadChildren } from '../storage/childrenStorage';
 import {
@@ -112,7 +112,9 @@ export default function SleepScreen() {
       hour,
       minute,
       'Lumi — hora do ritual do sono',
-      child ? `Hora de começar o ritual de dormir de ${child.nome}.` : 'Hora de começar o ritual de dormir.',
+      child
+        ? `Hora de começar o ritual de dormir de ${childFullName(child)}.`
+        : 'Hora de começar o ritual de dormir.',
     );
 
     await persistSchedule({ ...schedule, lembreteMinutos: minutos, notificationId });
@@ -190,7 +192,7 @@ export default function SleepScreen() {
                 onPress={() => setChildId(c.id)}
               >
                 <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
-                  {c.avatar} {c.nome}
+                  {c.avatar} {childFullName(c)}
                 </Text>
               </Pressable>
             );

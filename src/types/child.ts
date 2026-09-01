@@ -1,8 +1,11 @@
+import { AtividadeExtracurricular, WeeklyRoutine } from './weeklyRoutine';
+
 export type Turno = 'manha' | 'tarde' | 'integral' | '';
 
 export interface Child {
   id: string;
   nome: string;
+  sobrenome: string;
   dataNascimento: {
     dia: string;
     mes: string;
@@ -10,9 +13,14 @@ export interface Child {
   };
   avatar: string;
   escola: string;
+  naoVaiEscola: boolean;
   turnoEscolar: Turno;
-  atividades: string[];
-  responsaveisBusca: string[];
+  rotinaEscola: WeeklyRoutine;
+  atividades: AtividadeExtracurricular[];
   interesses: string[];
   observacoes: string;
+}
+
+export function childFullName(child: Pick<Child, 'nome' | 'sobrenome'>): string {
+  return [child.nome, child.sobrenome].filter(Boolean).join(' ');
 }
