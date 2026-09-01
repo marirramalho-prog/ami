@@ -13,16 +13,13 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { colors } from '../theme/colors';
 import { Child, childFullName, Turno } from '../types/child';
-import { Caregiver } from '../types/caregiver';
-import { AtividadeExtracurricular, criarResponsavelEscolaVazio } from '../types/weeklyRoutine';
+import { AtividadeExtracurricular } from '../types/weeklyRoutine';
 import { loadChildren, saveChildren } from '../storage/childrenStorage';
-import { loadCaregivers } from '../storage/caregiverStorage';
 import { calcularIdade, isValidDatePart } from '../utils/date';
 import TagInput from '../components/TagInput';
 import AvatarPicker, { AVATAR_OPTIONS } from '../components/AvatarPicker';
 import TurnoSelector from '../components/TurnoSelector';
-import ResponsavelEscolaSelector from '../components/ResponsavelEscolaSelector';
-import AtividadesEditor from '../components/AtividadesEditor';
+import AtividadesEditor, { resumoDias } from '../components/AtividadesEditor';
 
 const TURNO_LABEL: Record<Exclude<Turno, ''>, string> = {
   manha: 'Manhã',
@@ -40,7 +37,6 @@ const emptyForm = {
   escola: '',
   naoVaiEscola: false,
   turnoEscolar: '' as Turno,
-  responsavelEscola: criarResponsavelEscolaVazio(),
   atividades: [] as AtividadeExtracurricular[],
   interesses: [] as string[],
   observacoes: '',
@@ -48,13 +44,11 @@ const emptyForm = {
 
 export default function ChildrenProfileScreen() {
   const [children, setChildren] = useState<Child[]>([]);
-  const [caregivers, setCaregivers] = useState<Caregiver[]>([]);
   const [form, setForm] = useState(emptyForm);
 
   useFocusEffect(
     useCallback(() => {
       loadChildren().then(setChildren);
-      loadCaregivers().then(setCaregivers);
     }, []),
   );
 
@@ -80,7 +74,6 @@ export default function ChildrenProfileScreen() {
       escola: form.escola.trim(),
       naoVaiEscola: form.naoVaiEscola,
       turnoEscolar: form.turnoEscolar,
-      responsavelEscola: form.responsavelEscola,
       atividades: form.atividades,
       interesses: form.interesses,
       observacoes: form.observacoes.trim(),
@@ -196,24 +189,13 @@ export default function ChildrenProfileScreen() {
           )}
 
           {!form.naoVaiEscola && (
-            <>
-              <TurnoSelector
-                value={form.turnoEscolar}
-                onChange={(v) => updateForm('turnoEscolar', v)}
-              />
-              <ResponsavelEscolaSelector
-                cuidadores={caregivers}
-                value={form.responsavelEscola}
-                onChange={(v) => updateForm('responsavelEscola', v)}
-              />
-            </>
+            <TurnoSelector
+              value={form.turnoEscolar}
+              onChange={(v) => updateForm('turnoEscolar', v)}
+            />
           )}
 
-          <AtividadesEditor
-            value={form.atividades}
-            onChange={(v) => updateForm('atividades', v)}
-            cuidadores={caregivers}
-          />
+          <AtividadesEditor value={form.atividades} onChange={(v) => updateForm('atividades', v)} />
 
           <View style={styles.divider} />
           <Text style={styles.sectionTitle}>Personalização</Text>
@@ -275,7 +257,13 @@ export default function ChildrenProfileScreen() {
 
                 {item.atividades.length > 0 && (
                   <Text style={styles.cardTags}>
-                    Atividades: {item.atividades.map((a) => a.nome).join(', ')}
+                    Atividades:{' '}
+                    {item.atividades
+                      .map((a) => {
+                        const dias = resumoDias(a.diasSemana);
+                        return dias ? `${a.nome} (${dias})` : a.nome;
+                      })
+                      .join(', ')}
                   </Text>
                 )}
                 {item.interesses.length > 0 && (

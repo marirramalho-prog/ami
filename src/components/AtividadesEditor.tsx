@@ -1,19 +1,16 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
 import { colors } from '../theme/colors';
-import { Caregiver } from '../types/caregiver';
-import { AtividadeExtracurricular } from '../types/weeklyRoutine';
-import { criarRotinaVazia } from '../types/weeklyRoutine';
+import { AtividadeExtracurricular, DIAS_SEMANA } from '../types/weeklyRoutine';
 import { ATIVIDADES_SUGERIDAS } from '../data/atividadesSugeridas';
-import RotinaSemanal from './RotinaSemanal';
+import DiasSemanaSelector from './DiasSemanaSelector';
 
 interface Props {
   value: AtividadeExtracurricular[];
   onChange: (value: AtividadeExtracurricular[]) => void;
-  cuidadores: Caregiver[];
 }
 
-export default function AtividadesEditor({ value, onChange, cuidadores }: Props) {
+export default function AtividadesEditor({ value, onChange }: Props) {
   const [nomeDraft, setNomeDraft] = useState('');
   const [horarioInicio, setHorarioInicio] = useState('');
   const [horarioFim, setHorarioFim] = useState('');
@@ -34,7 +31,7 @@ export default function AtividadesEditor({ value, onChange, cuidadores }: Props)
       nome,
       horarioInicio: horarioInicio.trim(),
       horarioFim: horarioFim.trim(),
-      rotina: criarRotinaVazia(),
+      diasSemana: [],
     };
 
     onChange([...value, atividade]);
@@ -47,8 +44,8 @@ export default function AtividadesEditor({ value, onChange, cuidadores }: Props)
     onChange(value.filter((a) => a.id !== id));
   }
 
-  function handleUpdateRotina(id: string, rotina: AtividadeExtracurricular['rotina']) {
-    onChange(value.map((a) => (a.id === id ? { ...a, rotina } : a)));
+  function handleUpdateDias(id: string, diasSemana: AtividadeExtracurricular['diasSemana']) {
+    onChange(value.map((a) => (a.id === id ? { ...a, diasSemana } : a)));
   }
 
   return (
@@ -68,12 +65,9 @@ export default function AtividadesEditor({ value, onChange, cuidadores }: Props)
               <Text style={styles.remove}>remover</Text>
             </Pressable>
           </View>
-          <RotinaSemanal
-            titulo={atividade.nome}
-            icone="⭐"
-            cuidadores={cuidadores}
-            value={atividade.rotina}
-            onChange={(rotina) => handleUpdateRotina(atividade.id, rotina)}
+          <DiasSemanaSelector
+            value={atividade.diasSemana}
+            onChange={(dias) => handleUpdateDias(atividade.id, dias)}
           />
         </View>
       ))}
@@ -127,6 +121,12 @@ export default function AtividadesEditor({ value, onChange, cuidadores }: Props)
       </View>
     </View>
   );
+}
+
+export function resumoDias(dias: AtividadeExtracurricular['diasSemana']): string {
+  return DIAS_SEMANA.filter((d) => dias.includes(d.key))
+    .map((d) => d.nomeCompleto.slice(0, 3))
+    .join(', ');
 }
 
 const styles = StyleSheet.create({
