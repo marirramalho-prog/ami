@@ -124,6 +124,9 @@ export default function AtividadesEditor({ value, onChange }: Props) {
 }
 
 export function resumoDias(dias: AtividadeExtracurricular['diasSemana']): string {
+  // Defensivo: perfis cadastrados antes desta mudança podem não ter esse
+  // campo (formato antigo), sem isso a tela quebra ao ler dados velhos.
+  if (!dias) return '';
   return DIAS_SEMANA.filter((d) => dias.includes(d.key))
     .map((d) => d.nomeCompleto.slice(0, 3))
     .join(', ');
