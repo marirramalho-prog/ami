@@ -5,7 +5,6 @@ import {
   TextInput,
   Pressable,
   Switch,
-  FlatList,
   ScrollView,
   StyleSheet,
   KeyboardAvoidingView,
@@ -13,7 +12,7 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { colors } from '../theme/colors';
-import { Child, childFullName } from '../types/child';
+import { Child } from '../types/child';
 import { Caregiver } from '../types/caregiver';
 import { AgendaEvent } from '../types/routine';
 import { loadChildren } from '../storage/childrenStorage';
@@ -23,6 +22,11 @@ import { isValidDatePart } from '../utils/date';
 import { ensurePermission, scheduleReminder, cancelReminder } from '../utils/notifications';
 import ChildSelector from '../components/ChildSelector';
 import CaregiverSelector from '../components/CaregiverSelector';
+import WeeklyCalendar from '../components/WeeklyCalendar';
+import MonthlyCalendar from '../components/MonthlyCalendar';
+import { addDays, addMonths, labelMesAno, startOfWeek } from '../utils/calendarDates';
+
+type Visualizacao = 'semana' | 'mes';
 
 const emptyForm = {
   titulo: '',
@@ -40,6 +44,8 @@ export default function AgendaScreen() {
   const [caregivers, setCaregivers] = useState<Caregiver[]>([]);
   const [events, setEvents] = useState<AgendaEvent[]>([]);
   const [form, setForm] = useState(emptyForm);
+  const [visualizacao, setVisualizacao] = useState<Visualizacao>('semana');
+  const [dataReferencia, setDataReferencia] = useState(new Date());
 
   useFocusEffect(
     useCallback(() => {
@@ -103,6 +109,22 @@ export default function AgendaScreen() {
 
   const dataValida = isValidDatePart({ dia: form.dia, mes: form.mes, ano: form.ano });
   const podeAdicionar = form.titulo.trim().length > 0 && dataValida;
+
+  function handleAnterior() {
+    setDataReferencia((prev) =>
+      visualizacao === 'semana' ? addDays(prev, -7) : addMonths(prev, -1),
+    );
+  }
+
+  function handleProximo() {
+    setDataReferencia((prev) =>
+      visualizacao === 'semana' ? addDays(prev, 7) : addMonths(prev, 1),
+    );
+  }
+
+  function handleHoje() {
+    setDataReferencia(new Date());
+  }
 
   return (
     <KeyboardAvoidingView
@@ -195,34 +217,70 @@ export default function AgendaScreen() {
           </Pressable>
         </View>
 
-        <FlatList
-          data={events}
-          keyExtractor={(item) => item.id}
-          scrollEnabled={false}
-          contentContainerStyle={styles.list}
-          renderItem={({ item }) => {
-            const child = children.find((c) => c.id === item.childId);
-            const caregiver = caregivers.find((c) => c.id === item.caregiverId);
-            return (
-              <View style={styles.card}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.cardTitle}>{item.titulo}</Text>
-                  <Text style={styles.cardDetail}>
-                    {item.data.dia}/{item.data.mes}/{item.data.ano}
-                    {item.hora ? ` às ${item.hora}` : ''}
-                    {child ? ` · ${child.avatar} ${childFullName(child)}` : ''}
-                    {caregiver ? ` · 👤 ${caregiver.nomeCompleto}` : ''}
-                    {item.lembrete ? ' · 🔔' : ''}
-                  </Text>
-                </View>
-                <Pressable onPress={() => handleRemove(item.id)}>
-                  <Text style={styles.remove}>remover</Text>
-                </Pressable>
-              </View>
-            );
-          }}
-          ListEmptyComponent={<Text style={styles.empty}>Nenhum evento cadastrado ainda.</Text>}
-        />
+        <View style={styles.calendarHeader}>
+          <View style={styles.visualizacaoRow}>
+            <Pressable
+              style={[styles.visToggle, visualizacao === 'semana' && styles.visToggleAtivo]}
+              onPress={() => setVisualizacao('semana')}
+            >
+              <Text
+                style={[
+                  styles.visToggleTexto,
+                  visualizacao === 'semana' && styles.visToggleTextoAtivo,
+                ]}
+              >
+                Semana
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[styles.visToggle, visualizacao === 'mes' && styles.visToggleAtivo]}
+              onPress={() => setVisualizacao('mes')}
+            >
+              <Text
+                style={[
+                  styles.visToggleTexto,
+                  visualizacao === 'mes' && styles.visToggleTextoAtivo,
+                ]}
+              >
+                Mês
+              </Text>
+            </Pressable>
+          </View>
+
+          <View style={styles.navRow}>
+            <Pressable onPress={handleAnterior}>
+              <Text style={styles.navSeta}>◀</Text>
+            </Pressable>
+            <Pressable onPress={handleHoje}>
+              <Text style={styles.navLabel}>
+                {visualizacao === 'semana'
+                  ? labelMesAno(dataReferencia)
+                  : labelMesAno(dataReferencia)}
+              </Text>
+            </Pressable>
+            <Pressable onPress={handleProximo}>
+              <Text style={styles.navSeta}>▶</Text>
+            </Pressable>
+          </View>
+        </View>
+
+        {visualizacao === 'semana' ? (
+          <WeeklyCalendar
+            inicioSemana={startOfWeek(dataReferencia)}
+            children={children}
+            events={events}
+            caregivers={caregivers}
+            onRemoveEvento={handleRemove}
+          />
+        ) : (
+          <MonthlyCalendar
+            mesReferencia={dataReferencia}
+            children={children}
+            events={events}
+            caregivers={caregivers}
+            onRemoveEvento={handleRemove}
+          />
+        )}
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -242,6 +300,33 @@ const styles = StyleSheet.create({
   },
   label: { fontSize: 13, fontWeight: '600', color: colors.text },
   helper: { fontSize: 12, color: colors.textMuted, marginTop: -4 },
+  calendarHeader: { marginBottom: 12, gap: 10 },
+  visualizacaoRow: { flexDirection: 'row', gap: 8 },
+  visToggle: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+  },
+  visToggleAtivo: { backgroundColor: colors.primary, borderColor: colors.primary },
+  visToggleTexto: { fontSize: 13, color: colors.textMuted },
+  visToggleTextoAtivo: { color: colors.text, fontWeight: '600' },
+  navRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 20,
+  },
+  navSeta: { fontSize: 16, color: colors.text, paddingHorizontal: 8 },
+  navLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.text,
+    textTransform: 'capitalize',
+  },
   input: {
     borderWidth: 1,
     borderColor: colors.border,
