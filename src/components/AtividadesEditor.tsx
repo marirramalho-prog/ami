@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
 import { colors } from '../theme/colors';
-import { AtividadeExtracurricular, DIAS_SEMANA } from '../types/weeklyRoutine';
+import { AtividadeExtracurricular, DIAS_SEMANA, DiaKey } from '../types/weeklyRoutine';
 import { ATIVIDADES_SUGERIDAS } from '../data/atividadesSugeridas';
 import DiasSemanaSelector from './DiasSemanaSelector';
 
@@ -14,6 +14,7 @@ export default function AtividadesEditor({ value, onChange }: Props) {
   const [nomeDraft, setNomeDraft] = useState('');
   const [horarioInicio, setHorarioInicio] = useState('');
   const [horarioFim, setHorarioFim] = useState('');
+  const [diasDraft, setDiasDraft] = useState<DiaKey[]>([]);
 
   const sugestoes =
     nomeDraft.trim().length > 0
@@ -31,13 +32,14 @@ export default function AtividadesEditor({ value, onChange }: Props) {
       nome,
       horarioInicio: horarioInicio.trim(),
       horarioFim: horarioFim.trim(),
-      diasSemana: [],
+      diasSemana: diasDraft,
     };
 
     onChange([...value, atividade]);
     setNomeDraft('');
     setHorarioInicio('');
     setHorarioFim('');
+    setDiasDraft([]);
   }
 
   function handleRemove(id: string) {
@@ -110,6 +112,8 @@ export default function AtividadesEditor({ value, onChange }: Props) {
             maxLength={5}
           />
         </View>
+
+        <DiasSemanaSelector value={diasDraft} onChange={setDiasDraft} />
 
         <Pressable
           style={[styles.addButton, !nomeDraft.trim() && styles.addButtonDisabled]}
