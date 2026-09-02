@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -24,6 +24,8 @@ import ChildSelector from '../components/ChildSelector';
 import CaregiverSelector from '../components/CaregiverSelector';
 import WeeklyCalendar from '../components/WeeklyCalendar';
 import MonthlyCalendar from '../components/MonthlyCalendar';
+import DateFields from '../components/DateFields';
+import HoraInput from '../components/HoraInput';
 import { addDays, addMonths, labelMesAno, startOfWeek } from '../utils/calendarDates';
 
 type Visualizacao = 'semana' | 'mes';
@@ -34,6 +36,7 @@ const emptyForm = {
   mes: '',
   ano: '',
   hora: '',
+  horaFim: '',
   childId: null as string | null,
   caregiverId: null as string | null,
   lembrete: false,
@@ -46,6 +49,8 @@ export default function AgendaScreen() {
   const [form, setForm] = useState(emptyForm);
   const [visualizacao, setVisualizacao] = useState<Visualizacao>('semana');
   const [dataReferencia, setDataReferencia] = useState(new Date());
+  const horaInicioRef = useRef<TextInput>(null);
+  const horaFimRef = useRef<TextInput>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -78,6 +83,7 @@ export default function AgendaScreen() {
       titulo: form.titulo.trim(),
       data: { dia: form.dia.trim(), mes: form.mes.trim(), ano: form.ano.trim() },
       hora: form.hora.trim(),
+      horaFim: form.horaFim.trim(),
       childId: form.childId,
       caregiverId: form.caregiverId,
       lembrete: form.lembrete,
@@ -144,46 +150,37 @@ export default function AgendaScreen() {
           />
 
           <Text style={styles.label}>Data</Text>
-          <View style={styles.dateRow}>
-            <TextInput
-              style={[styles.input, styles.dateInputSmall]}
-              placeholder="DD"
-              placeholderTextColor={colors.textMuted}
-              value={form.dia}
-              onChangeText={(v) => updateForm('dia', v.replace(/\D/g, ''))}
-              keyboardType="number-pad"
-              maxLength={2}
-            />
-            <TextInput
-              style={[styles.input, styles.dateInputSmall]}
-              placeholder="MM"
-              placeholderTextColor={colors.textMuted}
-              value={form.mes}
-              onChangeText={(v) => updateForm('mes', v.replace(/\D/g, ''))}
-              keyboardType="number-pad"
-              maxLength={2}
-            />
-            <TextInput
-              style={[styles.input, styles.dateInputLarge]}
-              placeholder="AAAA"
-              placeholderTextColor={colors.textMuted}
-              value={form.ano}
-              onChangeText={(v) => updateForm('ano', v.replace(/\D/g, ''))}
-              keyboardType="number-pad"
-              maxLength={4}
-            />
-            <TextInput
-              style={[styles.input, styles.dateInputLarge]}
-              placeholder="HH:MM"
-              placeholderTextColor={colors.textMuted}
-              value={form.hora}
-              onChangeText={(v) => updateForm('hora', v)}
-              maxLength={5}
-            />
-          </View>
+          <DateFields
+            dia={form.dia}
+            mes={form.mes}
+            ano={form.ano}
+            onChangeDia={(v) => updateForm('dia', v)}
+            onChangeMes={(v) => updateForm('mes', v)}
+            onChangeAno={(v) => updateForm('ano', v)}
+            proximoCampoRef={horaInicioRef}
+          />
           {!dataValida && (form.dia || form.mes || form.ano) && (
             <Text style={styles.warning}>Data incompleta ou inválida.</Text>
           )}
+
+          <Text style={styles.label}>Horário</Text>
+          <View style={styles.horaRow}>
+            <HoraInput
+              ref={horaInicioRef}
+              value={form.hora}
+              onChangeText={(v) => updateForm('hora', v)}
+              placeholder="Início HH:MM"
+              proximoCampoRef={horaFimRef}
+              style={styles.horaInput}
+            />
+            <HoraInput
+              ref={horaFimRef}
+              value={form.horaFim}
+              onChangeText={(v) => updateForm('horaFim', v)}
+              placeholder="Fim HH:MM"
+              style={styles.horaInput}
+            />
+          </View>
 
           <ChildSelector
             children={children}
@@ -300,7 +297,9 @@ const styles = StyleSheet.create({
   },
   label: { fontSize: 13, fontWeight: '600', color: colors.text },
   helper: { fontSize: 12, color: colors.textMuted, marginTop: -4 },
-  calendarHeader: { marginBottom: 12, gap: 10 },
+  calendarHeader: { marginTop: 28, marginBottom: 12, gap: 10 },
+  horaRow: { flexDirection: 'row', gap: 8 },
+  horaInput: { flex: 1 },
   visualizacaoRow: { flexDirection: 'row', gap: 8 },
   visToggle: {
     flex: 1,

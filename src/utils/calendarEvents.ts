@@ -80,12 +80,13 @@ export function getEventsForDate(
       const subtituloPartes = [child ? childFullName(child) : null, caregiver?.nomeCompleto].filter(
         Boolean,
       );
+      const faixaHorario = event.horaFim ? `${event.hora}–${event.horaFim}` : event.hora;
       itens.push({
         id: `evento-${event.id}`,
         tipo: 'evento',
         titulo: event.titulo,
         subtitulo: subtituloPartes.join(' · '),
-        hora: event.hora || '',
+        hora: faixaHorario || '',
         horaOrdenacao: event.hora || '',
       });
     }
