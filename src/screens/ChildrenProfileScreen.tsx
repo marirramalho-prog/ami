@@ -45,6 +45,7 @@ const emptyForm = {
 export default function ChildrenProfileScreen() {
   const [children, setChildren] = useState<Child[]>([]);
   const [form, setForm] = useState(emptyForm);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -60,13 +61,34 @@ export default function ChildrenProfileScreen() {
     setForm((prev) => ({ ...prev, naoVaiEscola: !prev.naoVaiEscola, escola: '' }));
   }
 
-  async function handleAdd() {
+  function handleEdit(child: Child) {
+    setEditingId(child.id);
+    setForm({
+      nome: child.nome,
+      dia: child.dataNascimento.dia,
+      mes: child.dataNascimento.mes,
+      ano: child.dataNascimento.ano,
+      avatar: child.avatar,
+      escola: child.escola,
+      naoVaiEscola: child.naoVaiEscola,
+      turnoEscolar: child.turnoEscolar,
+      atividades: child.atividades,
+      interesses: child.interesses,
+      observacoes: child.observacoes,
+    });
+  }
+
+  function handleCancelEdit() {
+    setEditingId(null);
+    setForm(emptyForm);
+  }
+
+  async function handleSave() {
     if (!form.nome.trim()) return;
     if (!isValidDatePart({ dia: form.dia, mes: form.mes, ano: form.ano })) return;
     if (!form.naoVaiEscola && !form.escola.trim()) return;
 
-    const newChild: Child = {
-      id: Date.now().toString(),
+    const dadosFilho: Omit<Child, 'id'> = {
       nome: form.nome.trim(),
       dataNascimento: { dia: form.dia.trim(), mes: form.mes.trim(), ano: form.ano.trim() },
       avatar: form.avatar,
@@ -78,9 +100,13 @@ export default function ChildrenProfileScreen() {
       observacoes: form.observacoes.trim(),
     };
 
-    const updated = [...children, newChild];
+    const updated = editingId
+      ? children.map((c) => (c.id === editingId ? { id: editingId, ...dadosFilho } : c))
+      : [...children, { id: Date.now().toString(), ...dadosFilho }];
+
     setChildren(updated);
     await saveChildren(updated);
+    setEditingId(null);
     setForm(emptyForm);
   }
 
@@ -88,6 +114,7 @@ export default function ChildrenProfileScreen() {
     const updated = children.filter((c) => c.id !== id);
     setChildren(updated);
     await saveChildren(updated);
+    if (editingId === id) handleCancelEdit();
   }
 
   const dataValida = isValidDatePart({ dia: form.dia, mes: form.mes, ano: form.ano });
@@ -104,8 +131,71 @@ export default function ChildrenProfileScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         <Text style={styles.title}>Perfis dos filhos</Text>
 
+        <FlatList
+          data={children}
+          keyExtractor={(item) => item.id}
+          scrollEnabled={false}
+          contentContainerStyle={styles.list}
+          renderItem={({ item }) => {
+            const idade = calcularIdade(item.dataNascimento);
+            const turnoLabel = item.turnoEscolar ? TURNO_LABEL[item.turnoEscolar] : '';
+            const escolaLabel = item.naoVaiEscola ? 'Não vai à escola' : item.escola;
+            return (
+              <View style={styles.card}>
+                <View style={styles.cardHeader}>
+                  <Text style={styles.cardAvatar}>{item.avatar}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.cardName}>{childFullName(item)}</Text>
+                    <Text style={styles.cardDetail}>
+                      {[idade !== null && `${idade} anos`, escolaLabel, turnoLabel]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </Text>
+                  </View>
+                  <Pressable onPress={() => handleEdit(item)}>
+                    <Text style={styles.edit}>editar</Text>
+                  </Pressable>
+                  <Pressable onPress={() => handleRemove(item.id)}>
+                    <Text style={styles.remove}>remover</Text>
+                  </Pressable>
+                </View>
+
+                {item.atividades.length > 0 && (
+                  <Text style={styles.cardTags}>
+                    Atividades:{' '}
+                    {item.atividades
+                      .map((a) => {
+                        const dias = resumoDias(a.diasSemana);
+                        return dias ? `${a.nome} (${dias})` : a.nome;
+                      })
+                      .join(', ')}
+                  </Text>
+                )}
+                {item.interesses.length > 0 && (
+                  <Text style={styles.cardTags}>Interesses: {item.interesses.join(', ')}</Text>
+                )}
+                {item.observacoes ? (
+                  <Text style={styles.cardTags}>Obs: {item.observacoes}</Text>
+                ) : null}
+              </View>
+            );
+          }}
+          ListEmptyComponent={
+            <Text style={styles.empty}>Nenhum perfil cadastrado ainda.</Text>
+          }
+        />
+
         <View style={styles.form}>
-          <Text style={styles.sectionTitle}>Campos obrigatórios</Text>
+          <View style={styles.formHeaderRow}>
+            <Text style={styles.sectionTitle}>
+              {editingId ? `Editando ${form.nome || 'perfil'}` : 'Campos obrigatórios'}
+            </Text>
+            {editingId && (
+              <Pressable onPress={handleCancelEdit}>
+                <Text style={styles.cancelEdit}>cancelar</Text>
+              </Pressable>
+            )}
+          </View>
 
           <TextInput
             style={styles.input}
@@ -190,63 +280,14 @@ export default function ChildrenProfileScreen() {
 
           <Pressable
             style={[styles.button, !podeAdicionar && styles.buttonDisabled]}
-            onPress={handleAdd}
+            onPress={handleSave}
             disabled={!podeAdicionar}
           >
-            <Text style={styles.buttonText}>Adicionar filho(a)</Text>
+            <Text style={styles.buttonText}>
+              {editingId ? 'Salvar alterações' : 'Adicionar filho(a)'}
+            </Text>
           </Pressable>
         </View>
-
-        <FlatList
-          data={children}
-          keyExtractor={(item) => item.id}
-          scrollEnabled={false}
-          contentContainerStyle={styles.list}
-          renderItem={({ item }) => {
-            const idade = calcularIdade(item.dataNascimento);
-            const turnoLabel = item.turnoEscolar ? TURNO_LABEL[item.turnoEscolar] : '';
-            const escolaLabel = item.naoVaiEscola ? 'Não vai à escola' : item.escola;
-            return (
-              <View style={styles.card}>
-                <View style={styles.cardHeader}>
-                  <Text style={styles.cardAvatar}>{item.avatar}</Text>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.cardName}>{childFullName(item)}</Text>
-                    <Text style={styles.cardDetail}>
-                      {[idade !== null && `${idade} anos`, escolaLabel, turnoLabel]
-                        .filter(Boolean)
-                        .join(' · ')}
-                    </Text>
-                  </View>
-                  <Pressable onPress={() => handleRemove(item.id)}>
-                    <Text style={styles.remove}>remover</Text>
-                  </Pressable>
-                </View>
-
-                {item.atividades.length > 0 && (
-                  <Text style={styles.cardTags}>
-                    Atividades:{' '}
-                    {item.atividades
-                      .map((a) => {
-                        const dias = resumoDias(a.diasSemana);
-                        return dias ? `${a.nome} (${dias})` : a.nome;
-                      })
-                      .join(', ')}
-                  </Text>
-                )}
-                {item.interesses.length > 0 && (
-                  <Text style={styles.cardTags}>Interesses: {item.interesses.join(', ')}</Text>
-                )}
-                {item.observacoes ? (
-                  <Text style={styles.cardTags}>Obs: {item.observacoes}</Text>
-                ) : null}
-              </View>
-            );
-          }}
-          ListEmptyComponent={
-            <Text style={styles.empty}>Nenhum perfil cadastrado ainda.</Text>
-          }
-        />
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -401,6 +442,21 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   remove: {
+    color: colors.textMuted,
+    fontSize: 12,
+  },
+  edit: {
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: '600',
+    marginRight: 12,
+  },
+  formHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  cancelEdit: {
     color: colors.textMuted,
     fontSize: 12,
   },
