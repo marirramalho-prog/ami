@@ -20,6 +20,7 @@ import TagInput from '../components/TagInput';
 import AvatarPicker, { AVATAR_OPTIONS } from '../components/AvatarPicker';
 import TurnoSelector from '../components/TurnoSelector';
 import AtividadesEditor, { resumoDias } from '../components/AtividadesEditor';
+import DateFields from '../components/DateFields';
 
 const TURNO_LABEL: Record<Exclude<Turno, ''>, string> = {
   manha: 'Manhã',
@@ -29,7 +30,6 @@ const TURNO_LABEL: Record<Exclude<Turno, ''>, string> = {
 
 const emptyForm = {
   nome: '',
-  sobrenome: '',
   dia: '',
   mes: '',
   ano: '',
@@ -61,14 +61,13 @@ export default function ChildrenProfileScreen() {
   }
 
   async function handleAdd() {
-    if (!form.nome.trim() || !form.sobrenome.trim()) return;
+    if (!form.nome.trim()) return;
     if (!isValidDatePart({ dia: form.dia, mes: form.mes, ano: form.ano })) return;
     if (!form.naoVaiEscola && !form.escola.trim()) return;
 
     const newChild: Child = {
       id: Date.now().toString(),
       nome: form.nome.trim(),
-      sobrenome: form.sobrenome.trim(),
       dataNascimento: { dia: form.dia.trim(), mes: form.mes.trim(), ano: form.ano.trim() },
       avatar: form.avatar,
       escola: form.escola.trim(),
@@ -94,7 +93,6 @@ export default function ChildrenProfileScreen() {
   const dataValida = isValidDatePart({ dia: form.dia, mes: form.mes, ano: form.ano });
   const podeAdicionar =
     form.nome.trim().length > 0 &&
-    form.sobrenome.trim().length > 0 &&
     dataValida &&
     (form.naoVaiEscola || form.escola.trim().length > 0);
 
@@ -109,53 +107,23 @@ export default function ChildrenProfileScreen() {
         <View style={styles.form}>
           <Text style={styles.sectionTitle}>Campos obrigatórios</Text>
 
-          <View style={styles.nomeRow}>
-            <TextInput
-              style={[styles.input, { flex: 1 }]}
-              placeholder="Nome"
-              placeholderTextColor={colors.textMuted}
-              value={form.nome}
-              onChangeText={(v) => updateForm('nome', v)}
-            />
-            <TextInput
-              style={[styles.input, { flex: 1 }]}
-              placeholder="Sobrenome"
-              placeholderTextColor={colors.textMuted}
-              value={form.sobrenome}
-              onChangeText={(v) => updateForm('sobrenome', v)}
-            />
-          </View>
+          <TextInput
+            style={styles.input}
+            placeholder="Nome completo"
+            placeholderTextColor={colors.textMuted}
+            value={form.nome}
+            onChangeText={(v) => updateForm('nome', v)}
+          />
 
           <Text style={styles.label}>Data de nascimento</Text>
-          <View style={styles.dateRow}>
-            <TextInput
-              style={[styles.input, styles.dateInputSmall]}
-              placeholder="DD"
-              placeholderTextColor={colors.textMuted}
-              value={form.dia}
-              onChangeText={(v) => updateForm('dia', v.replace(/\D/g, ''))}
-              keyboardType="number-pad"
-              maxLength={2}
-            />
-            <TextInput
-              style={[styles.input, styles.dateInputSmall]}
-              placeholder="MM"
-              placeholderTextColor={colors.textMuted}
-              value={form.mes}
-              onChangeText={(v) => updateForm('mes', v.replace(/\D/g, ''))}
-              keyboardType="number-pad"
-              maxLength={2}
-            />
-            <TextInput
-              style={[styles.input, styles.dateInputLarge]}
-              placeholder="AAAA"
-              placeholderTextColor={colors.textMuted}
-              value={form.ano}
-              onChangeText={(v) => updateForm('ano', v.replace(/\D/g, ''))}
-              keyboardType="number-pad"
-              maxLength={4}
-            />
-          </View>
+          <DateFields
+            dia={form.dia}
+            mes={form.mes}
+            ano={form.ano}
+            onChangeDia={(v) => updateForm('dia', v)}
+            onChangeMes={(v) => updateForm('mes', v)}
+            onChangeAno={(v) => updateForm('ano', v)}
+          />
           {!dataValida && (form.dia || form.mes || form.ano) && (
             <Text style={styles.warning}>Data incompleta ou inválida.</Text>
           )}

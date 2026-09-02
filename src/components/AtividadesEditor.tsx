@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
 import { colors } from '../theme/colors';
 import { AtividadeExtracurricular, DIAS_SEMANA, DiaKey } from '../types/weeklyRoutine';
 import { ATIVIDADES_SUGERIDAS } from '../data/atividadesSugeridas';
 import DiasSemanaSelector from './DiasSemanaSelector';
+import HoraInput from './HoraInput';
 
 interface Props {
   value: AtividadeExtracurricular[];
@@ -15,6 +16,7 @@ export default function AtividadesEditor({ value, onChange }: Props) {
   const [horarioInicio, setHorarioInicio] = useState('');
   const [horarioFim, setHorarioFim] = useState('');
   const [diasDraft, setDiasDraft] = useState<DiaKey[]>([]);
+  const horarioFimRef = useRef<TextInput>(null);
 
   const sugestoes =
     nomeDraft.trim().length > 0
@@ -23,13 +25,15 @@ export default function AtividadesEditor({ value, onChange }: Props) {
         ).slice(0, 5)
       : [];
 
-  function handleAdd(nomeEscolhido?: string) {
-    const nome = (nomeEscolhido ?? nomeDraft).trim();
-    if (!nome) return;
+  const podeAdicionarAtividade =
+    nomeDraft.trim().length > 0 && horarioInicio.trim().length > 0 && horarioFim.trim().length > 0;
+
+  function handleAdd() {
+    if (!podeAdicionarAtividade) return;
 
     const atividade: AtividadeExtracurricular = {
       id: Date.now().toString(),
-      nome,
+      nome: nomeDraft.trim(),
       horarioInicio: horarioInicio.trim(),
       horarioFim: horarioFim.trim(),
       diasSemana: diasDraft,
@@ -86,7 +90,7 @@ export default function AtividadesEditor({ value, onChange }: Props) {
           {sugestoes.length > 0 && (
             <View style={styles.sugestoesBox}>
               {sugestoes.map((s) => (
-                <Pressable key={s} style={styles.sugestaoItem} onPress={() => handleAdd(s)}>
+                <Pressable key={s} style={styles.sugestaoItem} onPress={() => setNomeDraft(s)}>
                   <Text style={styles.sugestaoTexto}>{s}</Text>
                 </Pressable>
               ))}
@@ -95,30 +99,33 @@ export default function AtividadesEditor({ value, onChange }: Props) {
         </View>
 
         <View style={styles.horarioRow}>
-          <TextInput
-            style={[styles.input, styles.horarioInput]}
-            placeholder="Início HH:MM"
-            placeholderTextColor={colors.textMuted}
+          <HoraInput
             value={horarioInicio}
             onChangeText={setHorarioInicio}
-            maxLength={5}
+            placeholder="Início HH:MM"
+            proximoCampoRef={horarioFimRef}
+            style={styles.horarioInput}
           />
-          <TextInput
-            style={[styles.input, styles.horarioInput]}
-            placeholder="Fim HH:MM"
-            placeholderTextColor={colors.textMuted}
+          <HoraInput
+            ref={horarioFimRef}
             value={horarioFim}
             onChangeText={setHorarioFim}
-            maxLength={5}
+            placeholder="Fim HH:MM"
+            style={styles.horarioInput}
           />
         </View>
+        {!podeAdicionarAtividade && (nomeDraft || horarioInicio || horarioFim) && (
+          <Text style={styles.warning}>
+            Preencha nome, horário de início e de fim pra criar a atividade.
+          </Text>
+        )}
 
         <DiasSemanaSelector value={diasDraft} onChange={setDiasDraft} />
 
         <Pressable
-          style={[styles.addButton, !nomeDraft.trim() && styles.addButtonDisabled]}
-          onPress={() => handleAdd()}
-          disabled={!nomeDraft.trim()}
+          style={[styles.addButton, !podeAdicionarAtividade && styles.addButtonDisabled]}
+          onPress={handleAdd}
+          disabled={!podeAdicionarAtividade}
         >
           <Text style={styles.addButtonText}>Adicionar atividade</Text>
         </Pressable>
@@ -142,6 +149,7 @@ const styles = StyleSheet.create({
   atividadeHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   atividadeNome: { fontSize: 14, fontWeight: '600', color: colors.text, flex: 1 },
   remove: { color: colors.textMuted, fontSize: 12 },
+  warning: { fontSize: 12, color: '#B5555A' },
   novaAtividade: {
     gap: 8,
     borderWidth: 1,

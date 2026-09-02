@@ -5,7 +5,6 @@ export type Turno = 'manha' | 'tarde' | 'integral' | '';
 export interface Child {
   id: string;
   nome: string;
-  sobrenome: string;
   dataNascimento: {
     dia: string;
     mes: string;
@@ -20,6 +19,6 @@ export interface Child {
   observacoes: string;
 }
 
-export function childFullName(child: Pick<Child, 'nome' | 'sobrenome'>): string {
-  return [child.nome, child.sobrenome].filter(Boolean).join(' ');
+export function childFullName(child: Pick<Child, 'nome'>): string {
+  return child.nome;
 }

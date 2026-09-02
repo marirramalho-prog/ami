@@ -1,0 +1,64 @@
+import React, { forwardRef } from 'react';
+import { TextInput, StyleSheet, StyleProp, TextStyle } from 'react-native';
+import { colors } from '../theme/colors';
+
+interface Props {
+  value: string;
+  onChangeText: (v: string) => void;
+  placeholder?: string;
+  // campo pra focar automaticamente assim que HH:MM for completado (opcional)
+  proximoCampoRef?: React.RefObject<TextInput | null>;
+  style?: StyleProp<TextStyle>;
+}
+
+// Campo de horário: coloca os dois pontos sozinho depois de 2 dígitos
+// (15 -> 15:) e avança pro próximo campo quando completa HH:MM.
+const HoraInput = forwardRef<TextInput, Props>(
+  ({ value, onChangeText, placeholder, proximoCampoRef, style }, ref) => {
+    function handleChangeText(raw: string) {
+      const prevDigits = value.replace(/\D/g, '');
+      const rawDigits = raw.replace(/\D/g, '').slice(0, 4);
+      const apagando = raw.length < value.length;
+
+      let formatted = rawDigits;
+      if (rawDigits.length === 2 && apagando && prevDigits.length === 2) {
+        // permite apagar o ":" sem ele reaparecer sozinho
+        formatted = rawDigits;
+      } else if (rawDigits.length >= 2) {
+        formatted = `${rawDigits.slice(0, 2)}:${rawDigits.slice(2)}`;
+      }
+
+      onChangeText(formatted);
+      if (rawDigits.length === 4) {
+        proximoCampoRef?.current?.focus();
+      }
+    }
+
+    return (
+      <TextInput
+        ref={ref}
+        style={[styles.input, style]}
+        placeholder={placeholder || 'HH:MM'}
+        placeholderTextColor={colors.textMuted}
+        value={value}
+        onChangeText={handleChangeText}
+        keyboardType="number-pad"
+        maxLength={5}
+      />
+    );
+  },
+);
+
+export default HoraInput;
+
+const styles = StyleSheet.create({
+  input: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: colors.text,
+    backgroundColor: colors.brancoSuave,
+  },
+});
