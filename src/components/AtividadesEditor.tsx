@@ -20,8 +20,10 @@ export default function AtividadesEditor({ value, onChange }: Props) {
 
   const sugestoes =
     nomeDraft.trim().length > 0
-      ? ATIVIDADES_SUGERIDAS.filter((a) =>
-          a.toLowerCase().includes(nomeDraft.trim().toLowerCase()),
+      ? ATIVIDADES_SUGERIDAS.filter(
+          (a) =>
+            a.toLowerCase().includes(nomeDraft.trim().toLowerCase()) &&
+            a.toLowerCase() !== nomeDraft.trim().toLowerCase(),
         ).slice(0, 5)
       : [];
 
@@ -50,10 +52,6 @@ export default function AtividadesEditor({ value, onChange }: Props) {
     onChange(value.filter((a) => a.id !== id));
   }
 
-  function handleUpdateDias(id: string, diasSemana: AtividadeExtracurricular['diasSemana']) {
-    onChange(value.map((a) => (a.id === id ? { ...a, diasSemana } : a)));
-  }
-
   return (
     <View style={{ gap: 10 }}>
       <Text style={styles.label}>Atividades extracurriculares</Text>
@@ -71,10 +69,9 @@ export default function AtividadesEditor({ value, onChange }: Props) {
               <Text style={styles.remove}>remover</Text>
             </Pressable>
           </View>
-          <DiasSemanaSelector
-            value={atividade.diasSemana}
-            onChange={(dias) => handleUpdateDias(atividade.id, dias)}
-          />
+          {resumoDias(atividade.diasSemana) ? (
+            <Text style={styles.diasResumo}>{resumoDias(atividade.diasSemana)}</Text>
+          ) : null}
         </View>
       ))}
 
@@ -149,6 +146,7 @@ const styles = StyleSheet.create({
   atividadeHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   atividadeNome: { fontSize: 14, fontWeight: '600', color: colors.text, flex: 1 },
   remove: { color: colors.textMuted, fontSize: 12 },
+  diasResumo: { fontSize: 12, color: colors.textMuted },
   warning: { fontSize: 12, color: '#B5555A' },
   novaAtividade: {
     gap: 8,
