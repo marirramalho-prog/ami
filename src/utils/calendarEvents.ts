@@ -80,6 +80,7 @@ export function getEventsForDate(
       const subtituloPartes = [
         filhosDoEvento.map((c) => childFullName(c)).join(', ') || null,
         cuidadoresDoEvento.map((c) => c.nomeCompleto).join(', ') || null,
+        event.local ? `📍 ${event.local}` : null,
       ].filter(Boolean);
       const faixaHorario = event.horaFim ? `${event.hora}–${event.horaFim}` : event.hora;
       itens.push({

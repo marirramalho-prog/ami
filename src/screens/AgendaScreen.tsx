@@ -37,6 +37,7 @@ const emptyForm = {
   ano: '',
   hora: '',
   horaFim: '',
+  local: '',
   childIds: [] as string[],
   caregiverIds: [] as string[],
   lembrete: false,
@@ -84,6 +85,7 @@ export default function AgendaScreen() {
       data: { dia: form.dia.trim(), mes: form.mes.trim(), ano: form.ano.trim() },
       hora: form.hora.trim(),
       horaFim: form.horaFim.trim(),
+      local: form.local.trim(),
       childIds: form.childIds,
       caregiverIds: form.caregiverIds,
       lembrete: form.lembrete,
@@ -181,6 +183,14 @@ export default function AgendaScreen() {
               style={styles.horaInput}
             />
           </View>
+
+          <TextInput
+            style={styles.input}
+            placeholder="Local (endereço)"
+            placeholderTextColor={colors.textMuted}
+            value={form.local}
+            onChangeText={(v) => updateForm('local', v)}
+          />
 
           <ChildSelector
             children={children}
