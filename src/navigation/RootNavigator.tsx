@@ -1,8 +1,9 @@
 import React from 'react';
-import { Text } from 'react-native';
+import { Text, Image } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { colors } from '../theme/colors';
+import mascoteIcon from '../../assets/mascote/avatar-circular-bust.png';
 import ChildrenProfileScreen from '../screens/ChildrenProfileScreen';
 import CaregiversScreen from '../screens/CaregiversScreen';
 import AgendaScreen from '../screens/AgendaScreen';
@@ -16,7 +17,6 @@ import AssistantScreen from '../screens/AssistantScreen';
 const Tab = createBottomTabNavigator();
 
 const ICONS: Record<string, string> = {
-  Lumi: '🧚',
   Perfis: '👶',
   Cuidadores: '🧑‍🤝‍🧑',
   Agenda: '🗓️',
@@ -36,7 +36,12 @@ export default function RootNavigator() {
           tabBarActiveTintColor: colors.text,
           tabBarInactiveTintColor: colors.textMuted,
           tabBarStyle: { backgroundColor: colors.card, borderTopColor: colors.border },
-          tabBarIcon: () => <Text style={{ fontSize: 18 }}>{ICONS[route.name]}</Text>,
+          tabBarIcon: () =>
+            route.name === 'Lumi' ? (
+              <Image source={mascoteIcon} style={{ width: 22, height: 22 }} resizeMode="contain" />
+            ) : (
+              <Text style={{ fontSize: 18 }}>{ICONS[route.name]}</Text>
+            ),
         })}
       >
         <Tab.Screen name="Lumi" component={AssistantScreen} />

@@ -5,6 +5,7 @@ import {
   TextInput,
   Pressable,
   FlatList,
+  Image,
   ScrollView,
   StyleSheet,
   KeyboardAvoidingView,
@@ -17,6 +18,7 @@ import { loadChildren } from '../storage/childrenStorage';
 import { ChatConversation, ChatMessage } from '../types/chat';
 import { loadConversations, saveConversations } from '../storage/chatStorage';
 import { identificarTema, respostaPadrao, TEMA_LABEL } from '../utils/chatThemes';
+import mascoteIcon from '../../assets/mascote/avatar-circular-bust.png';
 
 const GREETING = 'Oi, eu sou a Lumi. Pode me contar o que você precisa.';
 const FALLBACK_NO_CHILD =
@@ -131,7 +133,7 @@ export default function AssistantScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.avatar}>🧚</Text>
+          <Image source={mascoteIcon} style={styles.avatar} resizeMode="contain" />
           <Text style={styles.title}>Lumi</Text>
         </View>
         <View style={styles.perguntaBox}>
@@ -156,7 +158,7 @@ export default function AssistantScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.avatar}>🧚</Text>
+          <Image source={mascoteIcon} style={styles.avatar} resizeMode="contain" />
           <Text style={styles.title}>Conversas anteriores</Text>
         </View>
         <FlatList
@@ -205,7 +207,7 @@ export default function AssistantScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <View style={styles.header}>
-        <Text style={styles.avatar}>🧚</Text>
+        <Image source={mascoteIcon} style={styles.avatar} resizeMode="contain" />
         <Text style={styles.title}>Lumi</Text>
         {conversas.length > 0 && (
           <Pressable style={styles.trocarConversa} onPress={() => setEstagio('lista')}>
@@ -269,7 +271,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 12,
   },
-  avatar: { fontSize: 28 },
+  avatar: { width: 32, height: 32 },
   title: { fontSize: 22, fontWeight: '700', color: colors.text, flex: 1 },
   trocarConversa: {
     borderWidth: 1,
