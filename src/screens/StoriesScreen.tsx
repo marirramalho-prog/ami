@@ -54,7 +54,7 @@ const emptyPrefs: StoryPreferences = {
   moral: '',
   lugar: '',
   epoca: '',
-  comprimento: 'média',
+  comprimento: 'média (4-7 min)',
   faixaEtaria: '',
   narrador: '',
   tipoFinal: 'fechado',
@@ -217,6 +217,7 @@ export default function StoriesScreen() {
             options={['herói', 'vilão', 'ambos']}
             value={prefs.arco}
             onChange={(v) => updatePrefs('arco', v as Arco)}
+            allowCustom
           />
 
           <ChipSelector
@@ -224,6 +225,7 @@ export default function StoriesScreen() {
             options={['protagonista', 'coadjuvante', 'não aparece']}
             value={prefs.papelCrianca}
             onChange={(v) => updatePrefs('papelCrianca', v as PapelCrianca)}
+            allowCustom
           />
 
           <ChipSelector
@@ -242,6 +244,7 @@ export default function StoriesScreen() {
             options={['Aventura', 'Drama', 'Terror', 'Comédia', 'Fantasia']}
             value={prefs.tema}
             onChange={(v) => updatePrefs('tema', v as Tema)}
+            allowCustom
           />
 
           {prefs.tema === 'Terror' && (
@@ -250,6 +253,7 @@ export default function StoriesScreen() {
               options={['leve', 'moderado', 'nenhum']}
               value={prefs.sustinho}
               onChange={(v) => updatePrefs('sustinho', v as Sustinho)}
+              allowCustom
             />
           )}
 
@@ -277,21 +281,23 @@ export default function StoriesScreen() {
             options={['hoje', 'passado', 'futuro', 'fantasia atemporal']}
             value={prefs.epoca}
             onChange={(v) => updatePrefs('epoca', v)}
+            allowCustom
           />
 
           <View style={styles.divider} />
           <Text style={styles.sectionTitle}>Formato</Text>
 
           <ChipSelector
-            label="Comprimento"
-            options={['curta', 'média', 'longa']}
+            label="Duração"
+            options={['curta (3-4 min)', 'média (4-7 min)', 'longa (7-10 min)']}
             value={prefs.comprimento}
             onChange={(v) => updatePrefs('comprimento', v as Comprimento)}
+            allowCustom
           />
 
           <ChipSelector
             label="Faixa etária / nível de leitura"
-            options={['2 a 4 anos', '5 a 7 anos', '8 a 10 anos', '11 a 13 anos']}
+            options={['até 2 anos', '2 a 4 anos', '5 a 7 anos', '8 a 10 anos', '11 a 13 anos']}
             value={prefs.faixaEtaria}
             onChange={(v) => updatePrefs('faixaEtaria', v)}
           />
@@ -308,6 +314,7 @@ export default function StoriesScreen() {
             options={['fechado', 'escolha sua aventura']}
             value={prefs.tipoFinal}
             onChange={(v) => updatePrefs('tipoFinal', v as TipoFinal)}
+            allowCustom
           />
           {prefs.tipoFinal === 'escolha sua aventura' && (
             <Text style={styles.helper}>

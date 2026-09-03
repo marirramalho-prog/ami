@@ -1,10 +1,12 @@
-export type Tema = 'Aventura' | 'Drama' | 'Terror' | 'Comédia' | 'Fantasia' | '';
-export type Sustinho = 'leve' | 'moderado' | 'nenhum' | '';
-export type PapelCrianca = 'protagonista' | 'coadjuvante' | 'não aparece' | '';
-export type Arco = 'herói' | 'vilão' | 'ambos' | '';
-export type Comprimento = 'curta' | 'média' | 'longa' | '';
-export type Narrador = '1ª pessoa' | '3ª pessoa' | '';
-export type TipoFinal = 'fechado' | 'escolha sua aventura' | '';
+// Todos esses campos aceitam texto livre (opção "outro" no seletor),
+// então o tipo fica como string — as opções sugeridas ficam só na tela.
+export type Tema = string;
+export type Sustinho = string;
+export type PapelCrianca = string;
+export type Arco = string;
+export type Comprimento = string;
+export type Narrador = string;
+export type TipoFinal = string;
 
 export interface CustomCharacter {
   id: string;
