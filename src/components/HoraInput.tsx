@@ -9,12 +9,15 @@ interface Props {
   // campo pra focar automaticamente assim que HH:MM for completado (opcional)
   proximoCampoRef?: React.RefObject<TextInput | null>;
   style?: StyleProp<TextStyle>;
+  editable?: boolean;
 }
 
 // Campo de horário: coloca os dois pontos sozinho depois de 2 dígitos
 // (15 -> 15:) e avança pro próximo campo quando completa HH:MM.
+// Padrão pra qualquer campo de horário do app — usar este componente
+// em vez de TextInput puro sempre que pedir um horário.
 const HoraInput = forwardRef<TextInput, Props>(
-  ({ value, onChangeText, placeholder, proximoCampoRef, style }, ref) => {
+  ({ value, onChangeText, placeholder, proximoCampoRef, style, editable = true }, ref) => {
     function handleChangeText(raw: string) {
       const prevDigits = value.replace(/\D/g, '');
       const rawDigits = raw.replace(/\D/g, '').slice(0, 4);
@@ -44,6 +47,7 @@ const HoraInput = forwardRef<TextInput, Props>(
         onChangeText={handleChangeText}
         keyboardType="number-pad"
         maxLength={5}
+        editable={editable}
       />
     );
   },

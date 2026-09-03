@@ -68,6 +68,7 @@ export default function SleepScreen() {
   const [logs, setLogs] = useState<DailyLog[]>([]);
   const [novoPasso, setNovoPasso] = useState('');
   const [dataReferencia, setDataReferencia] = useState(new Date());
+  const [salvo, setSalvo] = useState(false);
 
   const [despertou, setDespertou] = useState('');
   const [adormeceu, setAdormeceu] = useState('');
@@ -105,6 +106,16 @@ export default function SleepScreen() {
   function updateSchedule<K extends keyof SleepSchedule>(key: K, value: SleepSchedule[K]) {
     if (!schedule) return;
     persistSchedule({ ...schedule, [key]: value });
+  }
+
+  // Cada campo já salva sozinho ao ser alterado — este botão existe pra
+  // dar uma confirmação visual clara de que a rotina está salva, já que
+  // aqui não tem um botão "Adicionar" como em Perfis/Cuidadores.
+  async function handleSalvarRotina() {
+    if (!schedule) return;
+    await persistSchedule(schedule);
+    setSalvo(true);
+    setTimeout(() => setSalvo(false), 2500);
   }
 
   function updateDormirSemana(v: string) {
@@ -303,25 +314,15 @@ export default function SleepScreen() {
             <View style={styles.timeRow}>
               <View style={{ flex: 1 }}>
                 <Text style={styles.helper}>Semana</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="HH:MM"
-                  placeholderTextColor={colors.textMuted}
-                  value={schedule.dormirSemana}
-                  onChangeText={updateDormirSemana}
-                  maxLength={5}
-                />
+                <HoraInput value={schedule.dormirSemana} onChangeText={updateDormirSemana} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.helper}>Fim de semana</Text>
-                <TextInput
-                  style={[styles.input, schedule.mesmoDormirFds && styles.inputDesabilitado]}
-                  placeholder="HH:MM"
-                  placeholderTextColor={colors.textMuted}
+                <HoraInput
+                  style={schedule.mesmoDormirFds && styles.inputDesabilitado}
                   value={schedule.dormirFimDeSemana}
                   onChangeText={(v) => updateSchedule('dormirFimDeSemana', v)}
                   editable={!schedule.mesmoDormirFds}
-                  maxLength={5}
                 />
               </View>
             </View>
@@ -339,25 +340,15 @@ export default function SleepScreen() {
             <View style={styles.timeRow}>
               <View style={{ flex: 1 }}>
                 <Text style={styles.helper}>Semana</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="HH:MM"
-                  placeholderTextColor={colors.textMuted}
-                  value={schedule.acordarSemana}
-                  onChangeText={updateAcordarSemana}
-                  maxLength={5}
-                />
+                <HoraInput value={schedule.acordarSemana} onChangeText={updateAcordarSemana} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.helper}>Fim de semana</Text>
-                <TextInput
-                  style={[styles.input, schedule.mesmoAcordarFds && styles.inputDesabilitado]}
-                  placeholder="HH:MM"
-                  placeholderTextColor={colors.textMuted}
+                <HoraInput
+                  style={schedule.mesmoAcordarFds && styles.inputDesabilitado}
                   value={schedule.acordarFimDeSemana}
                   onChangeText={(v) => updateSchedule('acordarFimDeSemana', v)}
                   editable={!schedule.mesmoAcordarFds}
-                  maxLength={5}
                 />
               </View>
             </View>
@@ -385,13 +376,9 @@ export default function SleepScreen() {
                 {schedule.tiraSoneca && (
                   <>
                     <Text style={styles.label}>Horário da soneca</Text>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="HH:MM"
-                      placeholderTextColor={colors.textMuted}
+                    <HoraInput
                       value={schedule.horarioSoneca}
                       onChangeText={(v) => updateSchedule('horarioSoneca', v)}
-                      maxLength={5}
                     />
                     <ChipSelector
                       label="Duração da soneca"
@@ -463,6 +450,11 @@ export default function SleepScreen() {
               Minutos antes do horário de dormir (dias de semana). Só funciona no app instalado
               no celular — sem efeito na visualização web.
             </Text>
+
+            <Pressable style={styles.saveButton} onPress={handleSalvarRotina}>
+              <Text style={styles.saveButtonText}>Salvar rotina</Text>
+            </Pressable>
+            {salvo && <Text style={styles.savedText}>✓ Rotina salva</Text>}
 
             <View style={styles.divider} />
             <Text style={styles.sectionTitle}>Registro de hoje</Text>
@@ -598,6 +590,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.brancoSuave,
   },
   inputDesabilitado: { opacity: 0.5 },
+  saveButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  saveButtonText: { color: colors.text, fontWeight: '600' },
+  savedText: { fontSize: 12, color: colors.text, fontWeight: '600', textAlign: 'center' },
   textArea: { minHeight: 60, textAlignVertical: 'top' },
   timeRow: { flexDirection: 'row', gap: 10 },
   horaInput: { flex: 1 },
