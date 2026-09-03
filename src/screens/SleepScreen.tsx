@@ -39,6 +39,14 @@ import SleepWeeklyCalendar from '../components/SleepWeeklyCalendar';
 
 const IDADE_MAXIMA_SONECA = 5;
 
+// Texto compacto pra resumo da rotina já salva — "21:30" se semana e fim de
+// semana são iguais, "21:30 sem · 22:00 fds" quando divergem.
+function formatarHorarios(semana: string, fds: string, mesmo: boolean): string | null {
+  if (!semana && !fds) return null;
+  if (mesmo || semana === fds || !fds) return semana || fds;
+  return `${semana || '?'} sem · ${fds} fds`;
+}
+
 function emptySchedule(childId: string): SleepSchedule {
   return {
     childId,
@@ -69,23 +77,43 @@ export default function SleepScreen() {
   const [novoPasso, setNovoPasso] = useState('');
   const [dataReferencia, setDataReferencia] = useState(new Date());
   const [salvo, setSalvo] = useState(false);
+  const [editandoRotina, setEditandoRotina] = useState(false);
 
   const [despertou, setDespertou] = useState('');
   const [adormeceu, setAdormeceu] = useState('');
   const [detalhesDespertar, setDetalhesDespertar] = useState('');
   const adormeceuRef = useRef<TextInput>(null);
 
+  // Decide se abre a rotina resumida ou o formulário — olhando pra rotina
+  // já salva desse filho, não pro estado ao vivo do formulário (senão ela
+  // colapsaria sozinha no meio da digitação, assim que o primeiro campo
+  // fosse preenchido).
+  function decidirEdicao(id: string | null, scheduleList: SleepSchedule[]) {
+    if (!id) return;
+    const s = scheduleList.find((sch) => sch.childId === id);
+    setEditandoRotina(!(s?.dormirSemana || s?.acordarSemana));
+  }
+
   useFocusEffect(
     useCallback(() => {
-      loadChildren().then((list) => {
+      Promise.all([loadChildren(), loadSchedules()]).then(([list, scheduleList]) => {
         setChildren(list);
-        setChildId((prev) => (prev && list.some((c) => c.id === prev) ? prev : list[0]?.id ?? null));
+        setSchedules(scheduleList);
+        setChildId((prev) => {
+          const nextId = prev && list.some((c) => c.id === prev) ? prev : list[0]?.id ?? null;
+          decidirEdicao(nextId, scheduleList);
+          return nextId;
+        });
       });
-      loadSchedules().then(setSchedules);
       loadCompletions().then(setCompletions);
       loadDailyLogs().then(setLogs);
     }, []),
   );
+
+  function handleSelecionarFilho(id: string) {
+    setChildId(id);
+    decidirEdicao(id, schedules);
+  }
 
   const child = children.find((c) => c.id === childId) || null;
   const idade = child ? calcularIdade(child.dataNascimento) : null;
@@ -95,6 +123,8 @@ export default function SleepScreen() {
     () => schedules.find((s) => s.childId === childId) || (childId ? emptySchedule(childId) : null),
     [schedules, childId],
   );
+
+  const mostrarFormularioRotina = editandoRotina;
 
   async function persistSchedule(updated: SleepSchedule) {
     const others = schedules.filter((s) => s.childId !== updated.childId);
@@ -115,6 +145,7 @@ export default function SleepScreen() {
     if (!schedule) return;
     await persistSchedule(schedule);
     setSalvo(true);
+    setEditandoRotina(false);
     setTimeout(() => setSalvo(false), 2500);
   }
 
@@ -215,6 +246,8 @@ export default function SleepScreen() {
           childId,
           data: today,
           status: '',
+          horarioDormiu: '',
+          horarioAcordou: '',
           observacao: '',
           despertares: [],
           ...patch,
@@ -262,6 +295,8 @@ export default function SleepScreen() {
 
   const logHoje = logs.find((l) => l.childId === childId && l.data === today) || null;
   const statusHoje = logHoje?.status || '';
+  const horarioDormiuHoje = logHoje?.horarioDormiu || '';
+  const horarioAcordouHoje = logHoje?.horarioAcordou || '';
   const observacaoHoje = logHoje?.observacao || '';
   const despertaresHoje = logHoje?.despertares || [];
 
@@ -296,7 +331,7 @@ export default function SleepScreen() {
               <Pressable
                 key={c.id}
                 style={[styles.chip, selected && styles.chipSelected]}
-                onPress={() => setChildId(c.id)}
+                onPress={() => handleSelecionarFilho(c.id)}
               >
                 <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
                   {c.avatar} {childFullName(c)}
@@ -306,7 +341,41 @@ export default function SleepScreen() {
           })}
         </View>
 
-        {schedule && (
+        {schedule && !mostrarFormularioRotina && (
+          <View style={styles.form}>
+            <View style={styles.resumoHeaderRow}>
+              <Text style={styles.sectionTitle}>Rotina básica</Text>
+              <Pressable onPress={() => setEditandoRotina(true)}>
+                <Text style={styles.edit}>editar</Text>
+              </Pressable>
+            </View>
+            <Text style={styles.resumoLinha}>
+              Dormir: {formatarHorarios(schedule.dormirSemana, schedule.dormirFimDeSemana, schedule.mesmoDormirFds) || '—'}
+            </Text>
+            <Text style={styles.resumoLinha}>
+              Acordar: {formatarHorarios(schedule.acordarSemana, schedule.acordarFimDeSemana, schedule.mesmoAcordarFds) || '—'}
+            </Text>
+            {podeSoneca && schedule.tiraSoneca && (
+              <Text style={styles.resumoLinha}>
+                Soneca: {schedule.horarioSoneca || '?'}
+                {schedule.duracaoSoneca ? ` (${schedule.duracaoSoneca})` : ''}
+              </Text>
+            )}
+            {schedule.ritual.length > 0 && (
+              <Text style={styles.resumoLinha}>
+                Ritual: {schedule.ritual.length}{' '}
+                {schedule.ritual.length === 1 ? 'passo' : 'passos'}
+              </Text>
+            )}
+            {schedule.lembreteMinutos ? (
+              <Text style={styles.resumoLinha}>
+                Lembrete: {schedule.lembreteMinutos} min antes de dormir
+              </Text>
+            ) : null}
+          </View>
+        )}
+
+        {schedule && mostrarFormularioRotina && (
           <View style={styles.form}>
             <Text style={styles.sectionTitle}>Rotina básica</Text>
 
@@ -454,9 +523,12 @@ export default function SleepScreen() {
             <Pressable style={styles.saveButton} onPress={handleSalvarRotina}>
               <Text style={styles.saveButtonText}>Salvar rotina</Text>
             </Pressable>
-            {salvo && <Text style={styles.savedText}>✓ Rotina salva</Text>}
+          </View>
+        )}
+        {salvo && <Text style={styles.savedText}>✓ Rotina salva</Text>}
 
-            <View style={styles.divider} />
+        {schedule && (
+          <View style={styles.form}>
             <Text style={styles.sectionTitle}>Registro de hoje</Text>
             <ChipSelector
               label="Status da noite"
@@ -474,6 +546,27 @@ export default function SleepScreen() {
               onChangeText={(v) => updateTodayLog({ observacao: v })}
               multiline
             />
+
+            <Text style={styles.label}>Horário real de hoje</Text>
+            <Text style={styles.helper}>
+              Pode divergir da rotina cadastrada acima — registra o que aconteceu de fato hoje.
+            </Text>
+            <View style={styles.timeRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.helper}>Dormiu</Text>
+                <HoraInput
+                  value={horarioDormiuHoje}
+                  onChangeText={(v) => updateTodayLog({ horarioDormiu: v })}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.helper}>Acordou</Text>
+                <HoraInput
+                  value={horarioAcordouHoje}
+                  onChangeText={(v) => updateTodayLog({ horarioAcordou: v })}
+                />
+              </View>
+            </View>
 
             <Text style={styles.label}>Despertares noturnos</Text>
             {despertaresHoje.map((d) => (
@@ -577,6 +670,9 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   sectionTitle: { fontSize: 14, fontWeight: '700', color: colors.text, marginTop: 4 },
+  resumoHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  resumoLinha: { fontSize: 13, color: colors.text },
+  edit: { color: colors.textMuted, fontSize: 12, fontWeight: '600' },
   divider: { height: 1, backgroundColor: colors.border, marginVertical: 6 },
   label: { fontSize: 13, fontWeight: '600', color: colors.text },
   helper: { fontSize: 12, color: colors.textMuted },

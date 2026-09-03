@@ -37,6 +37,11 @@ export interface DailyLog {
   childId: string;
   data: string;
   status: StatusNoite;
+  // Horário real de hoje — separado da rotina base (SleepSchedule), porque
+  // quem acompanha a noite dia a dia precisa registrar até minutos de
+  // diferença, mesmo com a rotina já cadastrada.
+  horarioDormiu: string;
+  horarioAcordou: string;
   observacao: string;
   despertares: Despertar[];
 }

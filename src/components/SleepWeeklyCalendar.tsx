@@ -68,6 +68,12 @@ export default function SleepWeeklyCalendar({ inicioSemana, schedule, logs }: Pr
                     {resumo.log.status}
                   </Text>
                 ) : null}
+                {(resumo.log?.horarioDormiu || resumo.log?.horarioAcordou) && (
+                  <Text style={styles.itemLinha} numberOfLines={1}>
+                    <Text style={{ color: COR_NOITE }}>● </Text>
+                    {resumo.log.horarioDormiu || '?'}–{resumo.log.horarioAcordou || '?'}
+                  </Text>
+                )}
                 {resumo.log && resumo.log.despertares.length > 0 && (
                   <Text style={styles.itemLinha} numberOfLines={1}>
                     <Text style={{ color: COR_NOITE }}>● </Text>
@@ -102,6 +108,14 @@ export default function SleepWeeklyCalendar({ inicioSemana, schedule, logs }: Pr
                 <Text style={styles.itemTitulo}>{resumoSelecionado.log.status}</Text>
               </View>
             ) : null}
+            {(resumoSelecionado.log?.horarioDormiu || resumoSelecionado.log?.horarioAcordou) && (
+              <View style={[styles.item, { borderLeftColor: COR_NOITE }]}>
+                <Text style={styles.itemTitulo}>
+                  Dormiu {resumoSelecionado.log?.horarioDormiu || '?'} · acordou{' '}
+                  {resumoSelecionado.log?.horarioAcordou || '?'}
+                </Text>
+              </View>
+            )}
             {resumoSelecionado.log?.observacao ? (
               <View style={[styles.item, { borderLeftColor: COR_NOITE }]}>
                 <Text style={styles.itemSubtitulo}>{resumoSelecionado.log.observacao}</Text>
