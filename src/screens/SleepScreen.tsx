@@ -77,6 +77,7 @@ export default function SleepScreen() {
   const [novoPasso, setNovoPasso] = useState('');
   const [dataReferencia, setDataReferencia] = useState(new Date());
   const [salvo, setSalvo] = useState(false);
+  const [salvoHoje, setSalvoHoje] = useState(false);
   const [editandoRotina, setEditandoRotina] = useState(false);
 
   const [despertou, setDespertou] = useState('');
@@ -263,18 +264,25 @@ export default function SleepScreen() {
     await updateTodayLog({ status: novoStatus });
   }
 
-  async function handleAddDespertar() {
-    if (!despertou.trim() && !adormeceu.trim() && !detalhesDespertar.trim()) return;
-    const novo: Despertar = {
-      id: Date.now().toString(),
-      horarioDespertou: despertou.trim(),
-      horarioAdormeceu: adormeceu.trim(),
-      detalhes: detalhesDespertar.trim(),
-    };
-    await updateTodayLog({ despertares: [...despertaresHoje, novo] });
-    setDespertou('');
-    setAdormeceu('');
-    setDetalhesDespertar('');
+  // Status, observação e horário real já salvam sozinhos a cada mudança —
+  // este botão agrupa tudo do "Registro de hoje" numa confirmação só, e de
+  // quebra adiciona o despertar em rascunho (se tiver algo preenchido nos
+  // três campos abaixo).
+  async function handleSalvarInfosHoje() {
+    if (despertou.trim() || adormeceu.trim() || detalhesDespertar.trim()) {
+      const novo: Despertar = {
+        id: Date.now().toString(),
+        horarioDespertou: despertou.trim(),
+        horarioAdormeceu: adormeceu.trim(),
+        detalhes: detalhesDespertar.trim(),
+      };
+      await updateTodayLog({ despertares: [...despertaresHoje, novo] });
+      setDespertou('');
+      setAdormeceu('');
+      setDetalhesDespertar('');
+    }
+    setSalvoHoje(true);
+    setTimeout(() => setSalvoHoje(false), 2500);
   }
 
   async function handleRemoveDespertar(id: string) {
@@ -528,7 +536,7 @@ export default function SleepScreen() {
         {salvo && <Text style={styles.savedText}>✓ Rotina salva</Text>}
 
         {schedule && (
-          <View style={styles.form}>
+          <View style={[styles.form, styles.registroHoje]}>
             <Text style={styles.sectionTitle}>Registro de hoje</Text>
             <ChipSelector
               label="Status da noite"
@@ -610,9 +618,10 @@ export default function SleepScreen() {
                 value={detalhesDespertar}
                 onChangeText={setDetalhesDespertar}
               />
-              <Pressable style={styles.addDespertarButton} onPress={handleAddDespertar}>
-                <Text style={styles.addButtonText}>Adicionar despertar</Text>
+              <Pressable style={styles.addDespertarButton} onPress={handleSalvarInfosHoje}>
+                <Text style={styles.addButtonText}>Salvar infos de hoje</Text>
               </Pressable>
+              {salvoHoje && <Text style={styles.savedText}>✓ Infos de hoje salvas</Text>}
             </View>
           </View>
         )}
@@ -669,6 +678,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
+  registroHoje: { marginTop: 16 },
   sectionTitle: { fontSize: 14, fontWeight: '700', color: colors.text, marginTop: 4 },
   resumoHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   resumoLinha: { fontSize: 13, color: colors.text },
