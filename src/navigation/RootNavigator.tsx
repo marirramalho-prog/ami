@@ -10,6 +10,7 @@ import ChecklistScreen from '../screens/ChecklistScreen';
 import DiscoverScreen from '../screens/DiscoverScreen';
 import StoriesScreen from '../screens/StoriesScreen';
 import SleepScreen from '../screens/SleepScreen';
+import CareScreen from '../screens/CareScreen';
 import AssistantScreen from '../screens/AssistantScreen';
 
 const Tab = createBottomTabNavigator();
@@ -23,6 +24,7 @@ const ICONS: Record<string, string> = {
   Descobrir: '🔍',
   Histórias: '📖',
   Sono: '🌙',
+  Cuidados: '🩺',
 };
 
 export default function RootNavigator() {
@@ -45,6 +47,7 @@ export default function RootNavigator() {
         <Tab.Screen name="Descobrir" component={DiscoverScreen} />
         <Tab.Screen name="Histórias" component={StoriesScreen} />
         <Tab.Screen name="Sono" component={SleepScreen} />
+        <Tab.Screen name="Cuidados" component={CareScreen} />
       </Tab.Navigator>
     </NavigationContainer>
   );
