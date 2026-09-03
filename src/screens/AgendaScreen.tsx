@@ -10,14 +10,14 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { colors } from '../theme/colors';
 import { Child } from '../types/child';
 import { Caregiver } from '../types/caregiver';
-import { AgendaEvent } from '../types/routine';
+import { AgendaEvent, ChecklistTemplate } from '../types/routine';
 import { loadChildren } from '../storage/childrenStorage';
 import { loadCaregivers } from '../storage/caregiverStorage';
-import { loadEvents, saveEvents } from '../storage/routineStorage';
+import { loadEvents, saveEvents, loadChecklists } from '../storage/routineStorage';
 import { isValidDatePart } from '../utils/date';
 import { ensurePermission, scheduleReminder, cancelReminder } from '../utils/notifications';
 import ChildSelector from '../components/ChildSelector';
@@ -44,9 +44,11 @@ const emptyForm = {
 };
 
 export default function AgendaScreen() {
+  const navigation = useNavigation<any>();
   const [children, setChildren] = useState<Child[]>([]);
   const [caregivers, setCaregivers] = useState<Caregiver[]>([]);
   const [events, setEvents] = useState<AgendaEvent[]>([]);
+  const [checklists, setChecklists] = useState<ChecklistTemplate[]>([]);
   const [form, setForm] = useState(emptyForm);
   const [visualizacao, setVisualizacao] = useState<Visualizacao>('semana');
   const [dataReferencia, setDataReferencia] = useState(new Date());
@@ -58,8 +60,13 @@ export default function AgendaScreen() {
       loadChildren().then(setChildren);
       loadCaregivers().then(setCaregivers);
       loadEvents().then(setEvents);
+      loadChecklists().then(setChecklists);
     }, []),
   );
+
+  function handleOpenChecklist(templateId: string) {
+    navigation.navigate('Checklist', { highlightId: templateId });
+  }
 
   function updateForm<K extends keyof typeof emptyForm>(key: K, value: (typeof emptyForm)[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -277,7 +284,9 @@ export default function AgendaScreen() {
             children={children}
             events={events}
             caregivers={caregivers}
+            checklists={checklists}
             onRemoveEvento={handleRemove}
+            onOpenChecklist={handleOpenChecklist}
           />
         ) : (
           <MonthlyCalendar
@@ -285,7 +294,9 @@ export default function AgendaScreen() {
             children={children}
             events={events}
             caregivers={caregivers}
+            checklists={checklists}
             onRemoveEvento={handleRemove}
+            onOpenChecklist={handleOpenChecklist}
           />
         )}
       </ScrollView>

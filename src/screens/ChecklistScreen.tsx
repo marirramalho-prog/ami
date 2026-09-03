@@ -9,7 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useRoute } from '@react-navigation/native';
 import { colors } from '../theme/colors';
 import { ChecklistTemplate } from '../types/routine';
 import { loadChecklists, saveChecklists } from '../storage/routineStorage';
@@ -19,6 +19,8 @@ import { syncChecklistsForAllChildren } from '../utils/checklistSync';
 const TIPOS_SUGERIDOS = ['Rotina escolar', 'Passeio', 'Viagem', 'Fim de semana'];
 
 export default function ChecklistScreen() {
+  const route = useRoute<any>();
+  const highlightId: string | undefined = route.params?.highlightId;
   const [templates, setTemplates] = useState<ChecklistTemplate[]>([]);
   const [nome, setNome] = useState('');
   const [tipo, setTipo] = useState('');
@@ -142,7 +144,10 @@ export default function ChecklistScreen() {
             <Text style={styles.empty}>Nenhum checklist criado ainda.</Text>
           )}
           {templates.map((template) => (
-            <View key={template.id} style={styles.card}>
+            <View
+              key={template.id}
+              style={[styles.card, template.id === highlightId && styles.cardDestacado]}
+            >
               <View style={styles.cardHeader}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.cardName}>{template.nome}</Text>
@@ -259,6 +264,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     gap: 8,
   },
+  cardDestacado: { borderColor: colors.primary, borderWidth: 2 },
   cardHeader: { flexDirection: 'row', alignItems: 'center' },
   cardName: { fontSize: 16, fontWeight: '600', color: colors.text },
   cardTypeRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },

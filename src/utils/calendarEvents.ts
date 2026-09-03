@@ -1,7 +1,7 @@
 import { colors } from '../theme/colors';
 import { Child, childFullName } from '../types/child';
 import { Caregiver } from '../types/caregiver';
-import { AgendaEvent } from '../types/routine';
+import { AgendaEvent, ChecklistTemplate } from '../types/routine';
 import { DIAS_SEMANA } from '../types/weeklyRoutine';
 
 export const TIPO_COR: Record<string, string> = {
@@ -19,6 +19,9 @@ export interface CalendarItem {
   // usado só pra ordenar (ex: turno da escola), pode ser diferente do
   // horário mostrado na tela
   horaOrdenacao: string;
+  // checklist vinculado (escola/atividade), se houver — permite abrir
+  // direto "o que precisa levar" a partir do calendário
+  checklistTemplateId?: string;
 }
 
 // Horário de referência de cada turno, só pra ordenar a Escola junto
@@ -34,12 +37,16 @@ export function getEventsForDate(
   children: Child[],
   events: AgendaEvent[],
   caregivers: Caregiver[],
+  checklists: ChecklistTemplate[] = [],
 ): CalendarItem[] {
   const diaKey = DIAS_SEMANA[date.getDay()].key;
   const itens: CalendarItem[] = [];
 
   children.forEach((child) => {
     if (!child.naoVaiEscola && child.escola) {
+      const checklist = checklists.find(
+        (t) => t.origemAuto?.childId === child.id && !t.origemAuto?.atividadeId,
+      );
       itens.push({
         id: `escola-${child.id}`,
         tipo: 'escola',
@@ -47,11 +54,15 @@ export function getEventsForDate(
         subtitulo: `${childFullName(child)} · ${child.escola}`,
         hora: '',
         horaOrdenacao: HORA_REFERENCIA_TURNO[child.turnoEscolar] || '',
+        checklistTemplateId: checklist?.id,
       });
     }
 
     child.atividades.forEach((atividade) => {
       if (atividade.diasSemana?.includes(diaKey)) {
+        const checklist = checklists.find(
+          (t) => t.origemAuto?.childId === child.id && t.origemAuto?.atividadeId === atividade.id,
+        );
         itens.push({
           id: `atividade-${child.id}-${atividade.id}`,
           tipo: 'atividade',
@@ -59,6 +70,7 @@ export function getEventsForDate(
           subtitulo: childFullName(child),
           hora: atividade.horarioInicio || '',
           horaOrdenacao: atividade.horarioInicio || '',
+          checklistTemplateId: checklist?.id,
         });
       }
     });

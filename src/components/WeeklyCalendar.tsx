@@ -3,7 +3,7 @@ import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { colors } from '../theme/colors';
 import { Child } from '../types/child';
 import { Caregiver } from '../types/caregiver';
-import { AgendaEvent } from '../types/routine';
+import { AgendaEvent, ChecklistTemplate } from '../types/routine';
 import { addDays, isSameDay } from '../utils/calendarDates';
 import { getEventsForDate, TIPO_COR } from '../utils/calendarEvents';
 
@@ -12,7 +12,9 @@ interface Props {
   children: Child[];
   events: AgendaEvent[];
   caregivers: Caregiver[];
+  checklists: ChecklistTemplate[];
   onRemoveEvento?: (eventId: string) => void;
+  onOpenChecklist?: (templateId: string) => void;
 }
 
 const DIAS_HEADER = ['DOM.', 'SEG.', 'TER.', 'QUA.', 'QUI.', 'SEX.', 'SÁB.'];
@@ -23,19 +25,21 @@ export default function WeeklyCalendar({
   children,
   events,
   caregivers,
+  checklists,
   onRemoveEvento,
+  onOpenChecklist,
 }: Props) {
   const dias = Array.from({ length: 7 }, (_, i) => addDays(inicioSemana, i));
   const hoje = new Date();
   const [selecionado, setSelecionado] = useState<Date>(hoje);
 
-  const itensSelecionado = getEventsForDate(selecionado, children, events, caregivers);
+  const itensSelecionado = getEventsForDate(selecionado, children, events, caregivers, checklists);
 
   return (
     <View style={{ gap: 12 }}>
       <View style={styles.grid}>
         {dias.map((dia, i) => {
-          const itens = getEventsForDate(dia, children, events, caregivers);
+          const itens = getEventsForDate(dia, children, events, caregivers, checklists);
           const ehHoje = isSameDay(dia, hoje);
           const ehSelecionado = isSameDay(dia, selecionado);
           const visiveis = itens.slice(0, MAX_ITENS_VISIVEIS);
@@ -78,24 +82,34 @@ export default function WeeklyCalendar({
         {itensSelecionado.length === 0 ? (
           <Text style={styles.vazio}>Nada por aqui.</Text>
         ) : (
-          itensSelecionado.map((item) => (
-            <View key={item.id} style={[styles.item, { borderLeftColor: TIPO_COR[item.tipo] }]}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.itemTitulo}>
-                  {item.hora ? `${item.hora} · ` : ''}
-                  {item.titulo}
-                </Text>
-                {item.subtitulo ? (
-                  <Text style={styles.itemSubtitulo}>{item.subtitulo}</Text>
-                ) : null}
-              </View>
-              {item.tipo === 'evento' && onRemoveEvento && (
-                <Pressable onPress={() => onRemoveEvento(item.id.replace('evento-', ''))}>
-                  <Text style={styles.remove}>remover</Text>
-                </Pressable>
-              )}
-            </View>
-          ))
+          itensSelecionado.map((item) => {
+            const temChecklist = !!item.checklistTemplateId && !!onOpenChecklist;
+            return (
+              <Pressable
+                key={item.id}
+                style={[styles.item, { borderLeftColor: TIPO_COR[item.tipo] }]}
+                onPress={
+                  temChecklist ? () => onOpenChecklist!(item.checklistTemplateId!) : undefined
+                }
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.itemTitulo}>
+                    {item.hora ? `${item.hora} · ` : ''}
+                    {item.titulo}
+                  </Text>
+                  {item.subtitulo ? (
+                    <Text style={styles.itemSubtitulo}>{item.subtitulo}</Text>
+                  ) : null}
+                  {temChecklist && <Text style={styles.checklistLink}>ver checklist</Text>}
+                </View>
+                {item.tipo === 'evento' && onRemoveEvento && (
+                  <Pressable onPress={() => onRemoveEvento(item.id.replace('evento-', ''))}>
+                    <Text style={styles.remove}>remover</Text>
+                  </Pressable>
+                )}
+              </Pressable>
+            );
+          })
         )}
       </View>
     </View>
@@ -154,4 +168,5 @@ const styles = StyleSheet.create({
   itemTitulo: { fontSize: 13, color: colors.text, fontWeight: '600' },
   itemSubtitulo: { fontSize: 12, color: colors.textMuted },
   remove: { fontSize: 11, color: colors.textMuted },
+  checklistLink: { fontSize: 11, color: colors.text, fontWeight: '600', marginTop: 2 },
 });
