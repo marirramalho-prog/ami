@@ -32,9 +32,12 @@ export function calcularIdade({ dia, mes, ano }: DatePart): number | null {
   return idade >= 0 ? idade : null;
 }
 
+export function dateKey(date: Date): string {
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${mm}-${dd}`;
+}
+
 export function todayKey(): string {
-  const hoje = new Date();
-  const mm = String(hoje.getMonth() + 1).padStart(2, '0');
-  const dd = String(hoje.getDate()).padStart(2, '0');
-  return `${hoje.getFullYear()}-${mm}-${dd}`;
+  return dateKey(new Date());
 }

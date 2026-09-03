@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,14 @@ import {
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { colors } from '../theme/colors';
 import { Child, childFullName } from '../types/child';
-import { DailyLog, DuracaoSoneca, RitualStep, SleepSchedule, StatusNoite } from '../types/sleep';
+import {
+  DailyLog,
+  Despertar,
+  DuracaoSoneca,
+  RitualStep,
+  SleepSchedule,
+  StatusNoite,
+} from '../types/sleep';
 import { loadChildren } from '../storage/childrenStorage';
 import {
   loadSchedules,
@@ -24,8 +31,11 @@ import {
   saveDailyLogs,
 } from '../storage/sleepStorage';
 import { calcularIdade, todayKey } from '../utils/date';
+import { addDays, addMonths, labelMesAno, startOfWeek } from '../utils/calendarDates';
 import { ensurePermission, scheduleDailyReminder } from '../utils/notifications';
 import ChipSelector from '../components/ChipSelector';
+import HoraInput from '../components/HoraInput';
+import SleepWeeklyCalendar from '../components/SleepWeeklyCalendar';
 
 const IDADE_MAXIMA_SONECA = 5;
 
@@ -34,8 +44,10 @@ function emptySchedule(childId: string): SleepSchedule {
     childId,
     dormirSemana: '',
     dormirFimDeSemana: '',
+    mesmoDormirFds: false,
     acordarSemana: '',
     acordarFimDeSemana: '',
+    mesmoAcordarFds: false,
     tiraSoneca: false,
     horarioSoneca: '',
     duracaoSoneca: '',
@@ -55,6 +67,12 @@ export default function SleepScreen() {
   const [completions, setCompletions] = useState<Record<string, boolean>>({});
   const [logs, setLogs] = useState<DailyLog[]>([]);
   const [novoPasso, setNovoPasso] = useState('');
+  const [dataReferencia, setDataReferencia] = useState(new Date());
+
+  const [despertou, setDespertou] = useState('');
+  const [adormeceu, setAdormeceu] = useState('');
+  const [detalhesDespertar, setDetalhesDespertar] = useState('');
+  const adormeceuRef = useRef<TextInput>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -87,6 +105,38 @@ export default function SleepScreen() {
   function updateSchedule<K extends keyof SleepSchedule>(key: K, value: SleepSchedule[K]) {
     if (!schedule) return;
     persistSchedule({ ...schedule, [key]: value });
+  }
+
+  function updateDormirSemana(v: string) {
+    if (!schedule) return;
+    const novo = { ...schedule, dormirSemana: v };
+    if (schedule.mesmoDormirFds) novo.dormirFimDeSemana = v;
+    persistSchedule(novo);
+  }
+
+  function toggleMesmoDormirFds(v: boolean) {
+    if (!schedule) return;
+    persistSchedule({
+      ...schedule,
+      mesmoDormirFds: v,
+      dormirFimDeSemana: v ? schedule.dormirSemana : schedule.dormirFimDeSemana,
+    });
+  }
+
+  function updateAcordarSemana(v: string) {
+    if (!schedule) return;
+    const novo = { ...schedule, acordarSemana: v };
+    if (schedule.mesmoAcordarFds) novo.acordarFimDeSemana = v;
+    persistSchedule(novo);
+  }
+
+  function toggleMesmoAcordarFds(v: boolean) {
+    if (!schedule) return;
+    persistSchedule({
+      ...schedule,
+      mesmoAcordarFds: v,
+      acordarFimDeSemana: v ? schedule.acordarSemana : schedule.acordarFimDeSemana,
+    });
   }
 
   async function handleToggleLembrete(minutos: string) {
@@ -140,25 +190,71 @@ export default function SleepScreen() {
     await saveCompletions(updated);
   }
 
-  async function handleRegistrarStatus(status: StatusNoite) {
+  async function updateTodayLog(patch: Partial<Omit<DailyLog, 'id' | 'childId' | 'data'>>) {
     if (!childId) return;
     const existing = logs.find((l) => l.childId === childId && l.data === today);
     let updated: DailyLog[];
     if (existing) {
-      const novoStatus = existing.status === status ? '' : status;
-      updated = logs.map((l) => (l.id === existing.id ? { ...l, status: novoStatus } : l));
+      updated = logs.map((l) => (l.id === existing.id ? { ...l, ...patch } : l));
     } else {
-      updated = [...logs, { id: Date.now().toString(), childId, data: today, status }];
+      updated = [
+        ...logs,
+        {
+          id: Date.now().toString(),
+          childId,
+          data: today,
+          status: '',
+          observacao: '',
+          despertares: [],
+          ...patch,
+        },
+      ];
     }
     setLogs(updated);
     await saveDailyLogs(updated);
   }
 
-  const statusHoje = logs.find((l) => l.childId === childId && l.data === today)?.status || '';
-  const historicoChild = logs
-    .filter((l) => l.childId === childId && l.status)
-    .sort((a, b) => b.data.localeCompare(a.data))
-    .slice(0, 7);
+  async function handleRegistrarStatus(status: StatusNoite) {
+    const novoStatus = statusHoje === status ? '' : status;
+    await updateTodayLog({ status: novoStatus });
+  }
+
+  async function handleAddDespertar() {
+    if (!despertou.trim() && !adormeceu.trim() && !detalhesDespertar.trim()) return;
+    const novo: Despertar = {
+      id: Date.now().toString(),
+      horarioDespertou: despertou.trim(),
+      horarioAdormeceu: adormeceu.trim(),
+      detalhes: detalhesDespertar.trim(),
+    };
+    await updateTodayLog({ despertares: [...despertaresHoje, novo] });
+    setDespertou('');
+    setAdormeceu('');
+    setDetalhesDespertar('');
+  }
+
+  async function handleRemoveDespertar(id: string) {
+    await updateTodayLog({ despertares: despertaresHoje.filter((d) => d.id !== id) });
+  }
+
+  function handleAnterior() {
+    setDataReferencia((prev) => addDays(prev, -7));
+  }
+
+  function handleProximo() {
+    setDataReferencia((prev) => addDays(prev, 7));
+  }
+
+  function handleHoje() {
+    setDataReferencia(new Date());
+  }
+
+  const logHoje = logs.find((l) => l.childId === childId && l.data === today) || null;
+  const statusHoje = logHoje?.status || '';
+  const observacaoHoje = logHoje?.observacao || '';
+  const despertaresHoje = logHoje?.despertares || [];
+
+  const logsDoFilho = logs.filter((l) => l.childId === childId);
 
   if (children.length === 0) {
     return (
@@ -212,22 +308,32 @@ export default function SleepScreen() {
                   placeholder="HH:MM"
                   placeholderTextColor={colors.textMuted}
                   value={schedule.dormirSemana}
-                  onChangeText={(v) => updateSchedule('dormirSemana', v)}
+                  onChangeText={updateDormirSemana}
                   maxLength={5}
                 />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.helper}>Fim de semana</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, schedule.mesmoDormirFds && styles.inputDesabilitado]}
                   placeholder="HH:MM"
                   placeholderTextColor={colors.textMuted}
                   value={schedule.dormirFimDeSemana}
                   onChangeText={(v) => updateSchedule('dormirFimDeSemana', v)}
+                  editable={!schedule.mesmoDormirFds}
                   maxLength={5}
                 />
               </View>
             </View>
+            <Pressable
+              style={styles.checkboxRow}
+              onPress={() => toggleMesmoDormirFds(!schedule.mesmoDormirFds)}
+            >
+              <View style={[styles.checkbox, schedule.mesmoDormirFds && styles.checkboxChecked]}>
+                {schedule.mesmoDormirFds && <Text style={styles.checkmark}>✓</Text>}
+              </View>
+              <Text style={styles.checkboxLabel}>Mesmo horário da semana</Text>
+            </Pressable>
 
             <Text style={styles.label}>Horário de acordar</Text>
             <View style={styles.timeRow}>
@@ -238,22 +344,32 @@ export default function SleepScreen() {
                   placeholder="HH:MM"
                   placeholderTextColor={colors.textMuted}
                   value={schedule.acordarSemana}
-                  onChangeText={(v) => updateSchedule('acordarSemana', v)}
+                  onChangeText={updateAcordarSemana}
                   maxLength={5}
                 />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.helper}>Fim de semana</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, schedule.mesmoAcordarFds && styles.inputDesabilitado]}
                   placeholder="HH:MM"
                   placeholderTextColor={colors.textMuted}
                   value={schedule.acordarFimDeSemana}
                   onChangeText={(v) => updateSchedule('acordarFimDeSemana', v)}
+                  editable={!schedule.mesmoAcordarFds}
                   maxLength={5}
                 />
               </View>
             </View>
+            <Pressable
+              style={styles.checkboxRow}
+              onPress={() => toggleMesmoAcordarFds(!schedule.mesmoAcordarFds)}
+            >
+              <View style={[styles.checkbox, schedule.mesmoAcordarFds && styles.checkboxChecked]}>
+                {schedule.mesmoAcordarFds && <Text style={styles.checkmark}>✓</Text>}
+              </View>
+              <Text style={styles.checkboxLabel}>Mesmo horário da semana</Text>
+            </Pressable>
 
             {podeSoneca && (
               <>
@@ -357,18 +473,85 @@ export default function SleepScreen() {
               onChange={(v) => handleRegistrarStatus(v as StatusNoite)}
             />
 
-            {historicoChild.length > 0 && (
-              <View style={{ gap: 4, marginTop: 8 }}>
-                <Text style={styles.label}>Últimos registros</Text>
-                {historicoChild.map((log) => (
-                  <Text key={log.id} style={styles.historyLine}>
-                    {log.data} · {log.status}
+            <Text style={styles.label}>Observação</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              placeholder="Alguma nota sobre a noite de hoje"
+              placeholderTextColor={colors.textMuted}
+              value={observacaoHoje}
+              onChangeText={(v) => updateTodayLog({ observacao: v })}
+              multiline
+            />
+
+            <Text style={styles.label}>Despertares noturnos</Text>
+            {despertaresHoje.map((d) => (
+              <View key={d.id} style={styles.despertarCard}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.despertarTitulo}>
+                    Despertou {d.horarioDespertou || '?'} · dormiu de novo{' '}
+                    {d.horarioAdormeceu || '?'}
                   </Text>
-                ))}
+                  {d.detalhes ? (
+                    <Text style={styles.despertarDetalhes}>{d.detalhes}</Text>
+                  ) : null}
+                </View>
+                <Pressable onPress={() => handleRemoveDespertar(d.id)}>
+                  <Text style={styles.itemRemove}>×</Text>
+                </Pressable>
               </View>
-            )}
+            ))}
+
+            <View style={styles.novoDespertar}>
+              <View style={styles.timeRow}>
+                <HoraInput
+                  value={despertou}
+                  onChangeText={setDespertou}
+                  placeholder="Despertou HH:MM"
+                  proximoCampoRef={adormeceuRef}
+                  style={styles.horaInput}
+                />
+                <HoraInput
+                  ref={adormeceuRef}
+                  value={adormeceu}
+                  onChangeText={setAdormeceu}
+                  placeholder="Dormiu de novo HH:MM"
+                  style={styles.horaInput}
+                />
+              </View>
+              <TextInput
+                style={styles.input}
+                placeholder="Detalhes (opcional)"
+                placeholderTextColor={colors.textMuted}
+                value={detalhesDespertar}
+                onChangeText={setDetalhesDespertar}
+              />
+              <Pressable style={styles.addDespertarButton} onPress={handleAddDespertar}>
+                <Text style={styles.addButtonText}>Adicionar despertar</Text>
+              </Pressable>
+            </View>
           </View>
         )}
+
+        <View style={styles.calendarHeader}>
+          <Text style={styles.sectionTitle}>Resumo do sono</Text>
+          <View style={styles.navRow}>
+            <Pressable onPress={handleAnterior}>
+              <Text style={styles.navSeta}>◀</Text>
+            </Pressable>
+            <Pressable onPress={handleHoje}>
+              <Text style={styles.navLabel}>{labelMesAno(dataReferencia)}</Text>
+            </Pressable>
+            <Pressable onPress={handleProximo}>
+              <Text style={styles.navSeta}>▶</Text>
+            </Pressable>
+          </View>
+        </View>
+
+        <SleepWeeklyCalendar
+          inicioSemana={startOfWeek(dataReferencia)}
+          schedule={schedule}
+          logs={logsDoFilho}
+        />
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -414,8 +597,13 @@ const styles = StyleSheet.create({
     color: colors.text,
     backgroundColor: colors.brancoSuave,
   },
+  inputDesabilitado: { opacity: 0.5 },
+  textArea: { minHeight: 60, textAlignVertical: 'top' },
   timeRow: { flexDirection: 'row', gap: 10 },
+  horaInput: { flex: 1 },
   switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  checkboxRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: -4 },
+  checkboxLabel: { fontSize: 12, color: colors.textMuted },
   addButton: {
     width: 42,
     borderRadius: 10,
@@ -423,7 +611,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  addButtonText: { fontSize: 18, fontWeight: '700', color: colors.text },
+  addButtonText: { fontSize: 14, fontWeight: '700', color: colors.text },
   passoRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   passoCheck: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
   checkbox: {
@@ -442,5 +630,33 @@ const styles = StyleSheet.create({
   passoTextDone: { textDecorationLine: 'line-through', color: colors.textMuted },
   itemRemove: { fontSize: 16, color: colors.textMuted, paddingHorizontal: 4 },
   link: { fontSize: 12, color: colors.text, fontWeight: '600' },
-  historyLine: { fontSize: 12, color: colors.textMuted },
+  despertarCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.brancoSuave,
+    borderRadius: 10,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  despertarTitulo: { fontSize: 13, fontWeight: '600', color: colors.text },
+  despertarDetalhes: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  novoDespertar: {
+    gap: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderStyle: 'dashed',
+    borderRadius: 12,
+    padding: 12,
+  },
+  addDespertarButton: {
+    backgroundColor: colors.secondary,
+    borderRadius: 10,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  calendarHeader: { marginTop: 24, marginBottom: 12, gap: 8 },
+  navRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 20 },
+  navSeta: { fontSize: 16, color: colors.text, paddingHorizontal: 8 },
+  navLabel: { fontSize: 14, fontWeight: '700', color: colors.text, textTransform: 'capitalize' },
 });

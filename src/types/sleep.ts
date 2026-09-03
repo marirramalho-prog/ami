@@ -10,8 +10,10 @@ export interface SleepSchedule {
   childId: string;
   dormirSemana: string;
   dormirFimDeSemana: string;
+  mesmoDormirFds: boolean;
   acordarSemana: string;
   acordarFimDeSemana: string;
+  mesmoAcordarFds: boolean;
   tiraSoneca: boolean;
   horarioSoneca: string;
   duracaoSoneca: DuracaoSoneca;
@@ -23,9 +25,18 @@ export interface SleepSchedule {
 // chave: `${childId}_${data (YYYY-MM-DD)}_${stepId}`
 export type RitualCompletionMap = Record<string, boolean>;
 
+export interface Despertar {
+  id: string;
+  horarioDespertou: string;
+  horarioAdormeceu: string;
+  detalhes: string;
+}
+
 export interface DailyLog {
   id: string;
   childId: string;
   data: string;
   status: StatusNoite;
+  observacao: string;
+  despertares: Despertar[];
 }
