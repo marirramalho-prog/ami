@@ -28,6 +28,7 @@ const emptyForm = {
   relacao: '',
   celular: '',
   email: '',
+  principal: false,
 };
 
 export default function CaregiversScreen() {
@@ -37,7 +38,12 @@ export default function CaregiversScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      loadCaregivers().then(setCaregivers);
+      loadCaregivers().then((loaded) => {
+        setCaregivers(loaded);
+        // primeiro cuidador cadastrado: sugere já como principal (quem
+        // baixou o app), mas a pessoa pode desmarcar se quiser.
+        if (loaded.length === 0) setForm((prev) => ({ ...prev, principal: true }));
+      });
     }, []),
   );
 
@@ -55,6 +61,7 @@ export default function CaregiversScreen() {
       relacao: caregiver.relacao,
       celular: caregiver.celular,
       email: caregiver.email,
+      principal: caregiver.principal,
     });
   }
 
@@ -73,11 +80,18 @@ export default function CaregiversScreen() {
       relacao: form.relacao,
       celular: form.celular.trim(),
       email: form.email.trim(),
+      principal: form.principal,
     };
 
-    const updated = editingId
+    let updated = editingId
       ? caregivers.map((c) => (c.id === editingId ? { id: editingId, ...dados } : c))
       : [...caregivers, { id: Date.now().toString(), ...dados }];
+
+    // só um cuidador pode ser o principal por vez
+    if (dados.principal) {
+      const idPrincipal = editingId ?? updated[updated.length - 1].id;
+      updated = updated.map((c) => ({ ...c, principal: c.id === idPrincipal }));
+    }
 
     setCaregivers(updated);
     await saveCaregivers(updated);
@@ -116,7 +130,14 @@ export default function CaregiversScreen() {
             return (
               <View style={styles.card}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.cardName}>{item.nomeCompleto}</Text>
+                  <View style={styles.nomeRow}>
+                    <Text style={styles.cardName}>{item.nomeCompleto}</Text>
+                    {item.principal && (
+                      <View style={styles.principalTag}>
+                        <Text style={styles.principalTagTexto}>Você</Text>
+                      </View>
+                    )}
+                  </View>
                   <Text style={styles.cardDetail}>
                     {[item.relacao, idade !== null && `${idade} anos`].filter(Boolean).join(' · ')}
                   </Text>
@@ -202,6 +223,18 @@ export default function CaregiversScreen() {
           />
 
           <Pressable
+            style={[styles.toggleChip, form.principal && styles.toggleChipSelected]}
+            onPress={() => updateForm('principal', !form.principal)}
+          >
+            <Text style={[styles.toggleChipText, form.principal && styles.toggleChipTextSelected]}>
+              Esse sou eu (uso principal do app)
+            </Text>
+          </Pressable>
+          <Text style={styles.helper}>
+            Marca quem baixou o app neste aparelho — só um cuidador pode ser o principal.
+          </Text>
+
+          <Pressable
             style={[styles.button, !podeAdicionar && styles.buttonDisabled]}
             onPress={handleSave}
             disabled={!podeAdicionar}
@@ -245,6 +278,19 @@ const styles = StyleSheet.create({
     backgroundColor: colors.brancoSuave,
   },
   warning: { fontSize: 12, color: '#B5555A', marginTop: -4 },
+  helper: { fontSize: 12, color: colors.textMuted, marginTop: -4 },
+  toggleChip: {
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    backgroundColor: colors.brancoSuave,
+  },
+  toggleChipSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
+  toggleChipText: { fontSize: 13, color: colors.textMuted },
+  toggleChipTextSelected: { color: colors.text, fontWeight: '600' },
   button: {
     backgroundColor: colors.primary,
     borderRadius: 10,
@@ -265,7 +311,15 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     gap: 12,
   },
+  nomeRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   cardName: { fontSize: 16, fontWeight: '600', color: colors.text },
+  principalTag: {
+    backgroundColor: colors.lavandaClaro,
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  principalTagTexto: { fontSize: 10, fontWeight: '700', color: colors.text },
   cardDetail: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
   edit: { color: colors.text, fontSize: 12, fontWeight: '600' },
   remove: { color: colors.textMuted, fontSize: 12 },
