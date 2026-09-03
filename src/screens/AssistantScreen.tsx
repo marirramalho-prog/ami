@@ -1,132 +1,262 @@
-import React, { useState } from 'react';
-import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import React, { useCallback, useRef, useState } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  FlatList,
+  ScrollView,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { colors } from '../theme/colors';
 import { Child } from '../types/child';
 import { loadChildren } from '../storage/childrenStorage';
+import { ChatConversation, ChatMessage } from '../types/chat';
+import { loadConversations, saveConversations } from '../storage/chatStorage';
+import { identificarTema, respostaPadrao, TEMA_LABEL } from '../utils/chatThemes';
 
-interface Message {
-  id: string;
-  from: 'lumi' | 'mae';
-  text: string;
-}
-
-interface Shortcut {
-  id: string;
-  label: string;
-  resposta: string;
-  destino: string;
-}
-
-const SHORTCUTS: Shortcut[] = [
-  {
-    id: 'atividades',
-    label: 'Um passeio pro fim de semana',
-    resposta: 'Boa escolha. Separei um jeito rápido de achar passeios certeiros pertinho de casa.',
-    destino: 'Descobrir',
-  },
-  {
-    id: 'checklist',
-    label: 'Organizar a rotina de hoje',
-    resposta: 'Vamos deixar isso redondo. Aqui está o checklist pra organizar o dia.',
-    destino: 'Checklist',
-  },
-  {
-    id: 'agenda',
-    label: 'Marcar um compromisso',
-    resposta: 'Prontinho, já abri a agenda pra você anotar.',
-    destino: 'Agenda',
-  },
-  {
-    id: 'historia',
-    label: 'Uma história pro meu filho',
-    resposta: 'Adoro essa parte. Vamos montar uma história do jeitinho dele.',
-    destino: 'Histórias',
-  },
-  {
-    id: 'sono',
-    label: 'Rotina de sono',
-    resposta: 'Vamos organizar o fim do dia com calma. Aqui está a rotina de sono.',
-    destino: 'Sono',
-  },
-];
-
-const GREETING = 'Oi, eu sou a Lumi. Me diz o que você precisa agora que eu já encaminho.';
+const GREETING = 'Oi, eu sou a Lumi. Pode me contar o que você precisa.';
 const FALLBACK_NO_CHILD =
-  'Antes de eu ajudar em tudo isso, me conta quem é seu filho — cadastre o perfil dele que eu já deixo tudo mais certeiro pra vocês.';
+  'Uma dica: cadastrar o perfil do seu filho na aba Perfis deixa minhas respostas mais certeiras.';
+
+type Estagio = 'carregando' | 'perguntar_retomar' | 'lista' | 'conversa';
+
+function novaConversa(): ChatConversation {
+  const agora = new Date().toISOString();
+  return {
+    id: Date.now().toString(),
+    tema: 'outros',
+    titulo: '',
+    mensagens: [],
+    criadoEm: agora,
+    atualizadoEm: agora,
+  };
+}
+
+function labelData(iso: string): string {
+  const d = new Date(iso);
+  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
 
 export default function AssistantScreen() {
-  const navigation = useNavigation<any>();
   const [children, setChildren] = useState<Child[]>([]);
-  const [messages, setMessages] = useState<Message[]>([{ id: 'greeting', from: 'lumi', text: GREETING }]);
+  const [conversas, setConversas] = useState<ChatConversation[]>([]);
+  const [ativa, setAtiva] = useState<ChatConversation | null>(null);
+  const [estagio, setEstagio] = useState<Estagio>('carregando');
+  const [texto, setTexto] = useState('');
+  const inicializadoRef = useRef(false);
 
   useFocusEffect(
-    React.useCallback(() => {
+    useCallback(() => {
       loadChildren().then(setChildren);
+      loadConversations().then((lista) => {
+        setConversas(lista);
+        // Só decide a tela inicial (perguntar se quer retomar, ou ir direto
+        // pra uma conversa nova) uma vez — refocos seguintes só atualizam
+        // os dados em segundo plano, sem interromper o que a pessoa
+        // estiver fazendo.
+        if (!inicializadoRef.current) {
+          inicializadoRef.current = true;
+          if (lista.length > 0) {
+            setEstagio('perguntar_retomar');
+          } else {
+            setAtiva(novaConversa());
+            setEstagio('conversa');
+          }
+        }
+      });
     }, []),
   );
 
-  function handleShortcut(shortcut: Shortcut) {
-    setMessages((prev) => [
-      ...prev,
-      { id: `${shortcut.id}-mae-${Date.now()}`, from: 'mae', text: shortcut.label },
-      { id: `${shortcut.id}-lumi-${Date.now()}`, from: 'lumi', text: shortcut.resposta },
-    ]);
-    setTimeout(() => navigation.navigate(shortcut.destino), 600);
+  function handleIniciarNovaConversa() {
+    setAtiva(novaConversa());
+    setEstagio('conversa');
+  }
+
+  function handleAbrirConversa(conversa: ChatConversation) {
+    setAtiva(conversa);
+    setEstagio('conversa');
+  }
+
+  async function persistirConversa(atualizada: ChatConversation) {
+    const outras = conversas.filter((c) => c.id !== atualizada.id);
+    const lista = [...outras, atualizada];
+    setConversas(lista);
+    setAtiva(atualizada);
+    await saveConversations(lista);
+  }
+
+  async function handleEnviar() {
+    if (!ativa || !texto.trim()) return;
+    const textoEnviado = texto.trim();
+    setTexto('');
+
+    const primeiraMensagem = ativa.mensagens.length === 0;
+    const tema = primeiraMensagem ? identificarTema(textoEnviado) : ativa.tema;
+    const titulo = primeiraMensagem ? textoEnviado.slice(0, 60) : ativa.titulo;
+
+    const mensagemMae: ChatMessage = {
+      id: `${Date.now()}-mae`,
+      from: 'mae',
+      text: textoEnviado,
+      criadoEm: new Date().toISOString(),
+    };
+    const respostaLumi: ChatMessage = {
+      id: `${Date.now()}-lumi`,
+      from: 'lumi',
+      text: respostaPadrao(tema),
+      criadoEm: new Date().toISOString(),
+    };
+
+    await persistirConversa({
+      ...ativa,
+      tema,
+      titulo,
+      mensagens: [...ativa.mensagens, mensagemMae, respostaLumi],
+      atualizadoEm: new Date().toISOString(),
+    });
   }
 
   const semFilhos = children.length === 0;
+  const conversasOrdenadas = [...conversas].sort((a, b) => b.atualizadoEm.localeCompare(a.atualizadoEm));
+
+  if (estagio === 'carregando') {
+    return <View style={styles.container} />;
+  }
+
+  if (estagio === 'perguntar_retomar') {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.avatar}>🧚</Text>
+          <Text style={styles.title}>Lumi</Text>
+        </View>
+        <View style={styles.perguntaBox}>
+          <Text style={styles.perguntaTexto}>Deseja continuar alguma conversa anterior?</Text>
+          <View style={styles.perguntaBotoes}>
+            <Pressable
+              style={[styles.perguntaBotao, styles.perguntaBotaoPrimario]}
+              onPress={() => setEstagio('lista')}
+            >
+              <Text style={styles.perguntaBotaoTextoPrimario}>Sim</Text>
+            </Pressable>
+            <Pressable style={styles.perguntaBotao} onPress={handleIniciarNovaConversa}>
+              <Text style={styles.perguntaBotaoTexto}>Não</Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  if (estagio === 'lista') {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.avatar}>🧚</Text>
+          <Text style={styles.title}>Conversas anteriores</Text>
+        </View>
+        <FlatList
+          data={conversasOrdenadas}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listaContent}
+          renderItem={({ item }) => {
+            const ultima = item.mensagens[item.mensagens.length - 1];
+            return (
+              <Pressable style={styles.conversaCard} onPress={() => handleAbrirConversa(item)}>
+                <View style={styles.conversaCardHeader}>
+                  <View style={styles.temaTag}>
+                    <Text style={styles.temaTagTexto}>{TEMA_LABEL[item.tema]}</Text>
+                  </View>
+                  <Text style={styles.conversaData}>{labelData(item.atualizadoEm)}</Text>
+                </View>
+                <Text style={styles.conversaTitulo} numberOfLines={1}>
+                  {item.titulo || 'Conversa sem título'}
+                </Text>
+                {ultima && (
+                  <Text style={styles.conversaPreview} numberOfLines={1}>
+                    {ultima.from === 'lumi' ? 'Lumi: ' : 'Você: '}
+                    {ultima.text}
+                  </Text>
+                )}
+              </Pressable>
+            );
+          }}
+          ListEmptyComponent={
+            <Text style={styles.empty}>Nenhuma conversa anterior ainda.</Text>
+          }
+        />
+        <Pressable style={styles.novaConversaLink} onPress={handleIniciarNovaConversa}>
+          <Text style={styles.novaConversaLinkTexto}>+ iniciar uma conversa nova</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  // estagio === 'conversa'
+  const mensagens = ativa?.mensagens ?? [];
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <View style={styles.header}>
         <Text style={styles.avatar}>🧚</Text>
         <Text style={styles.title}>Lumi</Text>
+        {conversas.length > 0 && (
+          <Pressable style={styles.trocarConversa} onPress={() => setEstagio('lista')}>
+            <Text style={styles.trocarConversaTexto}>conversas salvas</Text>
+          </Pressable>
+        )}
       </View>
 
       <ScrollView contentContainerStyle={styles.chatContent}>
-        {messages.map((message) => (
+        {mensagens.length === 0 && (
+          <View style={[styles.bubble, styles.bubbleLumi]}>
+            <Text style={styles.bubbleTextLumi}>{GREETING}</Text>
+          </View>
+        )}
+        {mensagens.length === 0 && semFilhos && (
+          <View style={[styles.bubble, styles.bubbleLumi]}>
+            <Text style={styles.bubbleTextLumi}>{FALLBACK_NO_CHILD}</Text>
+          </View>
+        )}
+        {mensagens.map((message) => (
           <View
             key={message.id}
-            style={[
-              styles.bubble,
-              message.from === 'lumi' ? styles.bubbleLumi : styles.bubbleMae,
-            ]}
+            style={[styles.bubble, message.from === 'lumi' ? styles.bubbleLumi : styles.bubbleMae]}
           >
             <Text style={message.from === 'lumi' ? styles.bubbleTextLumi : styles.bubbleTextMae}>
               {message.text}
             </Text>
           </View>
         ))}
-
-        {semFilhos && (
-          <View style={[styles.bubble, styles.bubbleLumi]}>
-            <Text style={styles.bubbleTextLumi}>{FALLBACK_NO_CHILD}</Text>
-          </View>
-        )}
       </ScrollView>
 
-      <View style={styles.shortcuts}>
-        {semFilhos ? (
-          <Pressable
-            style={styles.shortcutButton}
-            onPress={() => navigation.navigate('Perfis')}
-          >
-            <Text style={styles.shortcutText}>Cadastrar meu filho</Text>
-          </Pressable>
-        ) : (
-          SHORTCUTS.map((shortcut) => (
-            <Pressable
-              key={shortcut.id}
-              style={styles.shortcutButton}
-              onPress={() => handleShortcut(shortcut)}
-            >
-              <Text style={styles.shortcutText}>{shortcut.label}</Text>
-            </Pressable>
-          ))
-        )}
+      <View style={styles.inputRow}>
+        <TextInput
+          style={styles.input}
+          placeholder="Digite sua mensagem"
+          placeholderTextColor={colors.textMuted}
+          value={texto}
+          onChangeText={setTexto}
+          onSubmitEditing={handleEnviar}
+          returnKeyType="send"
+          multiline
+        />
+        <Pressable
+          style={[styles.sendButton, !texto.trim() && styles.sendButtonDisabled]}
+          onPress={handleEnviar}
+          disabled={!texto.trim()}
+        >
+          <Text style={styles.sendButtonText}>➤</Text>
+        </Pressable>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -140,8 +270,16 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   avatar: { fontSize: 28 },
-  title: { fontSize: 22, fontWeight: '700', color: colors.text },
-  chatContent: { paddingHorizontal: 20, paddingBottom: 12, gap: 10 },
+  title: { fontSize: 22, fontWeight: '700', color: colors.text, flex: 1 },
+  trocarConversa: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  trocarConversaTexto: { fontSize: 11, color: colors.textMuted, fontWeight: '600' },
+  chatContent: { paddingHorizontal: 20, paddingBottom: 12, gap: 10, flexGrow: 1 },
   bubble: {
     maxWidth: '85%',
     borderRadius: 16,
@@ -160,19 +298,81 @@ const styles = StyleSheet.create({
   },
   bubbleTextLumi: { color: colors.text, fontSize: 14, lineHeight: 20 },
   bubbleTextMae: { color: colors.text, fontSize: 14, lineHeight: 20, fontWeight: '600' },
-  shortcuts: {
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 8,
     borderTopWidth: 1,
     borderTopColor: colors.border,
     padding: 16,
-    gap: 8,
   },
-  shortcutButton: {
+  input: {
+    flex: 1,
     borderWidth: 1,
     borderColor: colors.border,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    color: colors.text,
     backgroundColor: colors.card,
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
+    maxHeight: 100,
   },
-  shortcutText: { color: colors.text, fontSize: 14, fontWeight: '500' },
+  sendButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sendButtonDisabled: { opacity: 0.4 },
+  sendButtonText: { color: colors.text, fontSize: 16, fontWeight: '700' },
+
+  perguntaBox: {
+    marginHorizontal: 20,
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 20,
+    gap: 14,
+    alignItems: 'center',
+  },
+  perguntaTexto: { fontSize: 15, color: colors.text, textAlign: 'center', fontWeight: '600' },
+  perguntaBotoes: { flexDirection: 'row', gap: 10 },
+  perguntaBotao: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 20,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    backgroundColor: colors.brancoSuave,
+  },
+  perguntaBotaoPrimario: { backgroundColor: colors.primary, borderColor: colors.primary },
+  perguntaBotaoTexto: { color: colors.textMuted, fontWeight: '600' },
+  perguntaBotaoTextoPrimario: { color: colors.text, fontWeight: '700' },
+
+  listaContent: { paddingHorizontal: 20, paddingTop: 4, gap: 10, paddingBottom: 16 },
+  conversaCard: {
+    backgroundColor: colors.card,
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: 6,
+  },
+  conversaCardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  temaTag: {
+    backgroundColor: colors.lavandaClaro,
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  temaTagTexto: { fontSize: 10, fontWeight: '700', color: colors.text },
+  conversaData: { fontSize: 11, color: colors.textMuted },
+  conversaTitulo: { fontSize: 14, fontWeight: '600', color: colors.text },
+  conversaPreview: { fontSize: 12, color: colors.textMuted },
+  empty: { textAlign: 'center', color: colors.textMuted, marginTop: 12 },
+  novaConversaLink: { padding: 16, alignItems: 'center' },
+  novaConversaLinkTexto: { color: colors.text, fontWeight: '600', fontSize: 13 },
 });
