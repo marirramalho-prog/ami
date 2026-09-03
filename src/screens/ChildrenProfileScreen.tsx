@@ -21,6 +21,7 @@ import AvatarPicker, { AVATAR_OPTIONS } from '../components/AvatarPicker';
 import TurnoSelector from '../components/TurnoSelector';
 import AtividadesEditor, { resumoDias } from '../components/AtividadesEditor';
 import DateFields from '../components/DateFields';
+import { syncChecklistsForAllChildren, removeChecklistsForChild } from '../utils/checklistSync';
 
 const TURNO_LABEL: Record<Exclude<Turno, ''>, string> = {
   manha: 'Manhã',
@@ -106,6 +107,7 @@ export default function ChildrenProfileScreen() {
 
     setChildren(updated);
     await saveChildren(updated);
+    await syncChecklistsForAllChildren(updated);
     setEditingId(null);
     setForm(emptyForm);
   }
@@ -114,6 +116,7 @@ export default function ChildrenProfileScreen() {
     const updated = children.filter((c) => c.id !== id);
     setChildren(updated);
     await saveChildren(updated);
+    await removeChecklistsForChild(id);
     if (editingId === id) handleCancelEdit();
   }
 

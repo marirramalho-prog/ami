@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -9,9 +9,12 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { colors } from '../theme/colors';
 import { ChecklistTemplate } from '../types/routine';
 import { loadChecklists, saveChecklists } from '../storage/routineStorage';
+import { loadChildren } from '../storage/childrenStorage';
+import { syncChecklistsForAllChildren } from '../utils/checklistSync';
 
 const TIPOS_SUGERIDOS = ['Rotina escolar', 'Passeio', 'Viagem', 'Fim de semana'];
 
@@ -21,9 +24,14 @@ export default function ChecklistScreen() {
   const [tipo, setTipo] = useState('');
   const [novoItem, setNovoItem] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    loadChecklists().then(setTemplates);
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadChildren()
+        .then((children) => syncChecklistsForAllChildren(children))
+        .then(loadChecklists)
+        .then(setTemplates);
+    }, []),
+  );
 
   async function persist(updated: ChecklistTemplate[]) {
     setTemplates(updated);
@@ -138,9 +146,16 @@ export default function ChecklistScreen() {
               <View style={styles.cardHeader}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.cardName}>{template.nome}</Text>
-                  {template.tipo ? (
-                    <Text style={styles.cardType}>{template.tipo}</Text>
-                  ) : null}
+                  <View style={styles.cardTypeRow}>
+                    {template.tipo ? (
+                      <Text style={styles.cardType}>{template.tipo}</Text>
+                    ) : null}
+                    {template.origemAuto && (
+                      <View style={styles.autoTag}>
+                        <Text style={styles.autoTagTexto}>vinculado ao perfil</Text>
+                      </View>
+                    )}
+                  </View>
                 </View>
                 <Pressable onPress={() => handleRemoveTemplate(template.id)}>
                   <Text style={styles.remove}>remover</Text>
@@ -246,7 +261,15 @@ const styles = StyleSheet.create({
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center' },
   cardName: { fontSize: 16, fontWeight: '600', color: colors.text },
-  cardType: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  cardTypeRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
+  cardType: { fontSize: 12, color: colors.textMuted },
+  autoTag: {
+    backgroundColor: colors.lavandaClaro,
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  autoTagTexto: { fontSize: 10, fontWeight: '700', color: colors.text },
   remove: { color: colors.textMuted, fontSize: 12 },
   itemRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   checkbox: {

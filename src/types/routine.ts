@@ -22,4 +22,11 @@ export interface ChecklistTemplate {
   nome: string;
   tipo: string;
   itens: ChecklistItem[];
+  // presente quando o checklist nasceu sozinho a partir da escola ou de
+  // uma atividade extracurricular cadastrada no perfil do filho —
+  // mantém o vínculo pra atualizar o nome e limpar se a atividade sumir
+  origemAuto?: {
+    childId: string;
+    atividadeId?: string; // ausente = é o checklist da escola
+  };
 }
