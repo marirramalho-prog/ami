@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import { Caregiver } from '../types/caregiver';
 import { loadCaregivers, saveCaregivers } from '../storage/caregiverStorage';
 import { calcularIdade, isValidDatePart } from '../utils/date';
 import ChipSelector from '../components/ChipSelector';
+import DateFields from '../components/DateFields';
 
 const RELACOES = ['Mãe', 'Pai', 'Avó', 'Avô', 'Babá'];
 
@@ -32,9 +33,10 @@ const emptyForm = {
 export default function CaregiversScreen() {
   const [caregivers, setCaregivers] = useState<Caregiver[]>([]);
   const [form, setForm] = useState(emptyForm);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useFocusEffect(
-    React.useCallback(() => {
+    useCallback(() => {
       loadCaregivers().then(setCaregivers);
     }, []),
   );
@@ -43,12 +45,29 @@ export default function CaregiversScreen() {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  async function handleAdd() {
+  function handleEdit(caregiver: Caregiver) {
+    setEditingId(caregiver.id);
+    setForm({
+      nomeCompleto: caregiver.nomeCompleto,
+      dia: caregiver.dataNascimento.dia,
+      mes: caregiver.dataNascimento.mes,
+      ano: caregiver.dataNascimento.ano,
+      relacao: caregiver.relacao,
+      celular: caregiver.celular,
+      email: caregiver.email,
+    });
+  }
+
+  function handleCancelEdit() {
+    setEditingId(null);
+    setForm(emptyForm);
+  }
+
+  async function handleSave() {
     if (!form.nomeCompleto.trim()) return;
     if (!isValidDatePart({ dia: form.dia, mes: form.mes, ano: form.ano })) return;
 
-    const caregiver: Caregiver = {
-      id: Date.now().toString(),
+    const dados: Omit<Caregiver, 'id'> = {
       nomeCompleto: form.nomeCompleto.trim(),
       dataNascimento: { dia: form.dia.trim(), mes: form.mes.trim(), ano: form.ano.trim() },
       relacao: form.relacao,
@@ -56,9 +75,13 @@ export default function CaregiversScreen() {
       email: form.email.trim(),
     };
 
-    const updated = [...caregivers, caregiver];
+    const updated = editingId
+      ? caregivers.map((c) => (c.id === editingId ? { id: editingId, ...dados } : c))
+      : [...caregivers, { id: Date.now().toString(), ...dados }];
+
     setCaregivers(updated);
     await saveCaregivers(updated);
+    setEditingId(null);
     setForm(emptyForm);
   }
 
@@ -66,6 +89,7 @@ export default function CaregiversScreen() {
     const updated = caregivers.filter((c) => c.id !== id);
     setCaregivers(updated);
     await saveCaregivers(updated);
+    if (editingId === id) handleCancelEdit();
   }
 
   const dataValida = isValidDatePart({ dia: form.dia, mes: form.mes, ano: form.ano });
@@ -82,7 +106,52 @@ export default function CaregiversScreen() {
           Quem cuida das crianças e pode ser responsável por tarefas e atividades.
         </Text>
 
+        <FlatList
+          data={caregivers}
+          keyExtractor={(item) => item.id}
+          scrollEnabled={false}
+          contentContainerStyle={styles.list}
+          renderItem={({ item }) => {
+            const idade = calcularIdade(item.dataNascimento);
+            return (
+              <View style={styles.card}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.cardName}>{item.nomeCompleto}</Text>
+                  <Text style={styles.cardDetail}>
+                    {[item.relacao, idade !== null && `${idade} anos`].filter(Boolean).join(' · ')}
+                  </Text>
+                  {(item.celular || item.email) && (
+                    <Text style={styles.cardDetail}>
+                      {[item.celular, item.email].filter(Boolean).join(' · ')}
+                    </Text>
+                  )}
+                </View>
+                <Pressable onPress={() => handleEdit(item)}>
+                  <Text style={styles.edit}>editar</Text>
+                </Pressable>
+                <Pressable onPress={() => handleRemove(item.id)}>
+                  <Text style={styles.remove}>remover</Text>
+                </Pressable>
+              </View>
+            );
+          }}
+          ListEmptyComponent={
+            <Text style={styles.empty}>Nenhum cuidador cadastrado ainda.</Text>
+          }
+        />
+
         <View style={styles.form}>
+          <View style={styles.formHeaderRow}>
+            <Text style={styles.label}>
+              {editingId ? `Editando ${form.nomeCompleto || 'cuidador(a)'}` : 'Novo cuidador(a)'}
+            </Text>
+            {editingId && (
+              <Pressable onPress={handleCancelEdit}>
+                <Text style={styles.cancelEdit}>cancelar</Text>
+              </Pressable>
+            )}
+          </View>
+
           <TextInput
             style={styles.input}
             placeholder="Nome completo"
@@ -92,35 +161,14 @@ export default function CaregiversScreen() {
           />
 
           <Text style={styles.label}>Data de nascimento</Text>
-          <View style={styles.dateRow}>
-            <TextInput
-              style={[styles.input, styles.dateInputSmall]}
-              placeholder="DD"
-              placeholderTextColor={colors.textMuted}
-              value={form.dia}
-              onChangeText={(v) => updateForm('dia', v.replace(/\D/g, ''))}
-              keyboardType="number-pad"
-              maxLength={2}
-            />
-            <TextInput
-              style={[styles.input, styles.dateInputSmall]}
-              placeholder="MM"
-              placeholderTextColor={colors.textMuted}
-              value={form.mes}
-              onChangeText={(v) => updateForm('mes', v.replace(/\D/g, ''))}
-              keyboardType="number-pad"
-              maxLength={2}
-            />
-            <TextInput
-              style={[styles.input, styles.dateInputLarge]}
-              placeholder="AAAA"
-              placeholderTextColor={colors.textMuted}
-              value={form.ano}
-              onChangeText={(v) => updateForm('ano', v.replace(/\D/g, ''))}
-              keyboardType="number-pad"
-              maxLength={4}
-            />
-          </View>
+          <DateFields
+            dia={form.dia}
+            mes={form.mes}
+            ano={form.ano}
+            onChangeDia={(v) => updateForm('dia', v)}
+            onChangeMes={(v) => updateForm('mes', v)}
+            onChangeAno={(v) => updateForm('ano', v)}
+          />
           {!dataValida && (form.dia || form.mes || form.ano) && (
             <Text style={styles.warning}>Data incompleta ou inválida.</Text>
           )}
@@ -155,43 +203,14 @@ export default function CaregiversScreen() {
 
           <Pressable
             style={[styles.button, !podeAdicionar && styles.buttonDisabled]}
-            onPress={handleAdd}
+            onPress={handleSave}
             disabled={!podeAdicionar}
           >
-            <Text style={styles.buttonText}>Adicionar cuidador(a)</Text>
+            <Text style={styles.buttonText}>
+              {editingId ? 'Salvar alterações' : 'Adicionar cuidador(a)'}
+            </Text>
           </Pressable>
         </View>
-
-        <FlatList
-          data={caregivers}
-          keyExtractor={(item) => item.id}
-          scrollEnabled={false}
-          contentContainerStyle={styles.list}
-          renderItem={({ item }) => {
-            const idade = calcularIdade(item.dataNascimento);
-            return (
-              <View style={styles.card}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.cardName}>{item.nomeCompleto}</Text>
-                  <Text style={styles.cardDetail}>
-                    {[item.relacao, idade !== null && `${idade} anos`].filter(Boolean).join(' · ')}
-                  </Text>
-                  {(item.celular || item.email) && (
-                    <Text style={styles.cardDetail}>
-                      {[item.celular, item.email].filter(Boolean).join(' · ')}
-                    </Text>
-                  )}
-                </View>
-                <Pressable onPress={() => handleRemove(item.id)}>
-                  <Text style={styles.remove}>remover</Text>
-                </Pressable>
-              </View>
-            );
-          }}
-          ListEmptyComponent={
-            <Text style={styles.empty}>Nenhum cuidador cadastrado ainda.</Text>
-          }
-        />
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -210,6 +229,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
+  formHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   label: { fontSize: 13, fontWeight: '600', color: colors.text },
   input: {
     borderWidth: 1,
@@ -220,9 +244,6 @@ const styles = StyleSheet.create({
     color: colors.text,
     backgroundColor: colors.brancoSuave,
   },
-  dateRow: { flexDirection: 'row', gap: 8 },
-  dateInputSmall: { width: 60, textAlign: 'center' },
-  dateInputLarge: { width: 90, textAlign: 'center' },
   warning: { fontSize: 12, color: '#B5555A', marginTop: -4 },
   button: {
     backgroundColor: colors.primary,
@@ -233,7 +254,7 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: { opacity: 0.5 },
   buttonText: { color: colors.text, fontWeight: '600' },
-  list: { paddingVertical: 16, gap: 10 },
+  list: { paddingBottom: 16, gap: 10 },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -242,9 +263,12 @@ const styles = StyleSheet.create({
     padding: 14,
     borderWidth: 1,
     borderColor: colors.border,
+    gap: 12,
   },
   cardName: { fontSize: 16, fontWeight: '600', color: colors.text },
   cardDetail: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
+  edit: { color: colors.text, fontSize: 12, fontWeight: '600' },
   remove: { color: colors.textMuted, fontSize: 12 },
+  cancelEdit: { color: colors.textMuted, fontSize: 12 },
   empty: { textAlign: 'center', color: colors.textMuted, marginTop: 24 },
 });
