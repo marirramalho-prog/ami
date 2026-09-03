@@ -37,8 +37,8 @@ const emptyForm = {
   ano: '',
   hora: '',
   horaFim: '',
-  childId: null as string | null,
-  caregiverId: null as string | null,
+  childIds: [] as string[],
+  caregiverIds: [] as string[],
   lembrete: false,
 };
 
@@ -84,8 +84,8 @@ export default function AgendaScreen() {
       data: { dia: form.dia.trim(), mes: form.mes.trim(), ano: form.ano.trim() },
       hora: form.hora.trim(),
       horaFim: form.horaFim.trim(),
-      childId: form.childId,
-      caregiverId: form.caregiverId,
+      childIds: form.childIds,
+      caregiverIds: form.caregiverIds,
       lembrete: form.lembrete,
       notificationId: null,
     };
@@ -184,14 +184,14 @@ export default function AgendaScreen() {
 
           <ChildSelector
             children={children}
-            value={form.childId}
-            onChange={(v) => updateForm('childId', v)}
+            value={form.childIds}
+            onChange={(v) => updateForm('childIds', v)}
           />
 
           <CaregiverSelector
             caregivers={caregivers}
-            value={form.caregiverId}
-            onChange={(v) => updateForm('caregiverId', v)}
+            value={form.caregiverIds}
+            onChange={(v) => updateForm('caregiverIds', v)}
           />
 
           <View style={styles.switchRow}>

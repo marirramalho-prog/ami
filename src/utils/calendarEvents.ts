@@ -75,11 +75,12 @@ export function getEventsForDate(
       eventDate.getMonth() === date.getMonth() &&
       eventDate.getDate() === date.getDate()
     ) {
-      const child = children.find((c) => c.id === event.childId);
-      const caregiver = caregivers.find((c) => c.id === event.caregiverId);
-      const subtituloPartes = [child ? childFullName(child) : null, caregiver?.nomeCompleto].filter(
-        Boolean,
-      );
+      const filhosDoEvento = children.filter((c) => event.childIds?.includes(c.id));
+      const cuidadoresDoEvento = caregivers.filter((c) => event.caregiverIds?.includes(c.id));
+      const subtituloPartes = [
+        filhosDoEvento.map((c) => childFullName(c)).join(', ') || null,
+        cuidadoresDoEvento.map((c) => c.nomeCompleto).join(', ') || null,
+      ].filter(Boolean);
       const faixaHorario = event.horaFim ? `${event.hora}–${event.horaFim}` : event.hora;
       itens.push({
         id: `evento-${event.id}`,

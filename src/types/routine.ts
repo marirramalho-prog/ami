@@ -4,8 +4,8 @@ export interface AgendaEvent {
   data: { dia: string; mes: string; ano: string };
   hora: string;
   horaFim: string;
-  childId: string | null;
-  caregiverId: string | null;
+  childIds: string[];
+  caregiverIds: string[];
   lembrete: boolean;
   notificationId: string | null;
 }

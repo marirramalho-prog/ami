@@ -5,8 +5,8 @@ import { Child, childFullName } from '../types/child';
 
 interface Props {
   children: Child[];
-  value: string | null;
-  onChange: (childId: string | null) => void;
+  value: string[];
+  onChange: (childIds: string[]) => void;
 }
 
 export default function ChildSelector({ children, value, onChange }: Props) {
@@ -18,25 +18,21 @@ export default function ChildSelector({ children, value, onChange }: Props) {
     );
   }
 
+  function toggle(childId: string) {
+    onChange(value.includes(childId) ? value.filter((id) => id !== childId) : [...value, childId]);
+  }
+
   return (
     <View style={{ gap: 8 }}>
-      <Text style={styles.label}>Filho(a) (opcional)</Text>
+      <Text style={styles.label}>Filho(s) (opcional)</Text>
       <View style={styles.row}>
-        <Pressable
-          style={[styles.chip, value === null && styles.chipSelected]}
-          onPress={() => onChange(null)}
-        >
-          <Text style={[styles.chipText, value === null && styles.chipTextSelected]}>
-            Nenhum
-          </Text>
-        </Pressable>
         {children.map((child) => {
-          const selected = value === child.id;
+          const selected = value.includes(child.id);
           return (
             <Pressable
               key={child.id}
               style={[styles.chip, selected && styles.chipSelected]}
-              onPress={() => onChange(child.id)}
+              onPress={() => toggle(child.id)}
             >
               <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
                 {child.avatar} {childFullName(child)}

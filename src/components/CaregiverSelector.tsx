@@ -5,8 +5,8 @@ import { Caregiver } from '../types/caregiver';
 
 interface Props {
   caregivers: Caregiver[];
-  value: string | null;
-  onChange: (caregiverId: string | null) => void;
+  value: string[];
+  onChange: (caregiverIds: string[]) => void;
   label?: string;
 }
 
@@ -24,25 +24,25 @@ export default function CaregiverSelector({
     );
   }
 
+  function toggle(caregiverId: string) {
+    onChange(
+      value.includes(caregiverId)
+        ? value.filter((id) => id !== caregiverId)
+        : [...value, caregiverId],
+    );
+  }
+
   return (
     <View style={{ gap: 8 }}>
       <Text style={styles.label}>{label}</Text>
       <View style={styles.row}>
-        <Pressable
-          style={[styles.chip, value === null && styles.chipSelected]}
-          onPress={() => onChange(null)}
-        >
-          <Text style={[styles.chipText, value === null && styles.chipTextSelected]}>
-            Nenhum
-          </Text>
-        </Pressable>
         {caregivers.map((caregiver) => {
-          const selected = value === caregiver.id;
+          const selected = value.includes(caregiver.id);
           return (
             <Pressable
               key={caregiver.id}
               style={[styles.chip, selected && styles.chipSelected]}
-              onPress={() => onChange(caregiver.id)}
+              onPress={() => toggle(caregiver.id)}
             >
               <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
                 {caregiver.nomeCompleto}
