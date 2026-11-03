@@ -19,8 +19,9 @@ import { ChatConversation, ChatMessage } from '../types/chat';
 import { loadConversations, saveConversations } from '../storage/chatStorage';
 import { identificarTema, respostaPadrao, TEMA_LABEL } from '../utils/chatThemes';
 import mascoteIcon from '../../assets/mascote/avatar-circular-bust.png';
+import amiWordmark from '../../assets/marca/ami-wordmark.png';
 
-const GREETING = 'Oi, eu sou a Lumi. Pode me contar o que você precisa.';
+const GREETING = 'Oi, eu sou a Âmi. Pode me contar o que você precisa.';
 const FALLBACK_NO_CHILD =
   'Uma dica: cadastrar o perfil do seu filho na aba Perfis deixa minhas respostas mais certeiras.';
 
@@ -134,7 +135,9 @@ export default function AssistantScreen() {
       <View style={styles.container}>
         <View style={styles.header}>
           <Image source={mascoteIcon} style={styles.avatar} resizeMode="contain" />
-          <Text style={styles.title}>Lumi</Text>
+          <View style={styles.titleLogo}>
+            <Image source={amiWordmark} style={styles.wordmark} resizeMode="contain" accessibilityLabel="Âmi" />
+          </View>
         </View>
         <View style={styles.perguntaBox}>
           <Text style={styles.perguntaTexto}>Deseja continuar alguma conversa anterior?</Text>
@@ -180,7 +183,7 @@ export default function AssistantScreen() {
                 </Text>
                 {ultima && (
                   <Text style={styles.conversaPreview} numberOfLines={1}>
-                    {ultima.from === 'lumi' ? 'Lumi: ' : 'Você: '}
+                    {ultima.from === 'lumi' ? 'Âmi: ' : 'Você: '}
                     {ultima.text}
                   </Text>
                 )}
@@ -208,7 +211,9 @@ export default function AssistantScreen() {
     >
       <View style={styles.header}>
         <Image source={mascoteIcon} style={styles.avatar} resizeMode="contain" />
-        <Text style={styles.title}>Lumi</Text>
+        <View style={styles.titleLogo}>
+          <Image source={amiWordmark} style={styles.wordmark} resizeMode="contain" accessibilityLabel="Âmi" />
+        </View>
         {conversas.length > 0 && (
           <Pressable style={styles.trocarConversa} onPress={() => setEstagio('lista')}>
             <Text style={styles.trocarConversaTexto}>conversas salvas</Text>
@@ -273,6 +278,9 @@ const styles = StyleSheet.create({
   },
   avatar: { width: 32, height: 32 },
   title: { fontSize: 22, fontWeight: '700', color: colors.text, flex: 1 },
+  titleLogo: { flex: 1, justifyContent: 'center' },
+  // wordmark oficial (assets/marca/ami-wordmark.png, proporção 621x310)
+  wordmark: { height: 30, width: 60 },
   trocarConversa: {
     borderWidth: 1,
     borderColor: colors.border,

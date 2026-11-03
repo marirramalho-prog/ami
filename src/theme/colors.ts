@@ -1,4 +1,4 @@
-// Paleta oficial da marca Lumi (Contexto/lumi_registro_completo_projeto.docx, seção 7)
+// Paleta oficial da marca Âmi (Contexto/lumi_registro_completo_projeto.docx, seção 7)
 export const colors = {
   lilasSuave: '#CCC3E6',
   azulClaro: '#C8DFF0',

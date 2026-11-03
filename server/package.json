@@ -2,7 +2,7 @@
   "name": "lumi-story-server",
   "version": "1.0.0",
   "private": true,
-  "description": "Servidor local mínimo que guarda a chave da Anthropic e gera histórias para o app Lumi.",
+  "description": "Servidor local mínimo que guarda a chave da Anthropic e gera histórias para o app Âmi.",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"

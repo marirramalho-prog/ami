@@ -26,6 +26,7 @@ import WeeklyCalendar from '../components/WeeklyCalendar';
 import MonthlyCalendar from '../components/MonthlyCalendar';
 import DateFields from '../components/DateFields';
 import HoraInput from '../components/HoraInput';
+import ImportEventModal from '../components/ImportEventModal';
 import { addDays, addMonths, labelMesAno, startOfWeek } from '../utils/calendarDates';
 
 type Visualizacao = 'semana' | 'mes';
@@ -52,6 +53,7 @@ export default function AgendaScreen() {
   const [form, setForm] = useState(emptyForm);
   const [visualizacao, setVisualizacao] = useState<Visualizacao>('semana');
   const [dataReferencia, setDataReferencia] = useState(new Date());
+  const [importVisible, setImportVisible] = useState(false);
   const horaInicioRef = useRef<TextInput>(null);
   const horaFimRef = useRef<TextInput>(null);
 
@@ -112,6 +114,26 @@ export default function AgendaScreen() {
     setEvents(updated);
     await saveEvents(updated);
     setForm(emptyForm);
+  }
+
+  async function handleImportSave(newEvents: AgendaEvent[]) {
+    const comLembrete = await Promise.all(
+      newEvents.map(async (evento) => {
+        if (!evento.lembrete) return evento;
+        const notificationId = await scheduleReminder(evento);
+        return { ...evento, notificationId };
+      }),
+    );
+
+    setEvents((prev) => {
+      const updated = [...prev, ...comLembrete].sort((a, b) => {
+        const da = `${a.data.ano}-${a.data.mes}-${a.data.dia}`;
+        const db = `${b.data.ano}-${b.data.mes}-${b.data.dia}`;
+        return da.localeCompare(db);
+      });
+      saveEvents(updated);
+      return updated;
+    });
   }
 
   async function handleRemove(id: string) {
@@ -229,7 +251,18 @@ export default function AgendaScreen() {
           >
             <Text style={styles.buttonText}>Adicionar à agenda</Text>
           </Pressable>
+
+          <Pressable style={styles.importButton} onPress={() => setImportVisible(true)}>
+            <Text style={styles.importButtonText}>📷 Importar de foto ou PDF</Text>
+          </Pressable>
         </View>
+
+        <ImportEventModal
+          visible={importVisible}
+          onClose={() => setImportVisible(false)}
+          children={children}
+          onAddEvents={handleImportSave}
+        />
 
         <View style={styles.calendarHeader}>
           <View style={styles.visualizacaoRow}>
@@ -374,6 +407,15 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: { opacity: 0.5 },
   buttonText: { color: colors.text, fontWeight: '600' },
+  importButton: {
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  importButtonText: { color: colors.text, fontWeight: '600' },
   list: { paddingVertical: 16, gap: 10 },
   card: {
     flexDirection: 'row',

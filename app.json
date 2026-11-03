@@ -1,17 +1,22 @@
 {
   "expo": {
-    "name": "lumi-app",
+    "name": "Âmi",
     "slug": "lumi-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F5F4F8"
+    },
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#DED4EC",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -20,6 +25,16 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-status-bar",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "A Âmi usa suas fotos pra importar compromissos da agenda a partir de convites e documentos.",
+          "cameraPermission": "A Âmi usa a câmera pra fotografar convites e documentos e importar compromissos da agenda."
+        }
+      ]
+    ]
   }
 }

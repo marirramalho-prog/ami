@@ -36,7 +36,7 @@ export async function scheduleReminder(event: AgendaEvent): Promise<string | nul
 
   const id = await Notifications.scheduleNotificationAsync({
     content: {
-      title: 'Lumi — lembrete',
+      title: 'Âmi — lembrete',
       body: event.titulo,
     },
     trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: trigger },

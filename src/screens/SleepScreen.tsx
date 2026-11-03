@@ -204,7 +204,7 @@ export default function SleepScreen() {
     const notificationId = await scheduleDailyReminder(
       hour,
       minute,
-      'Lumi — hora do ritual do sono',
+      'Âmi — hora do ritual do sono',
       child
         ? `Hora de começar o ritual de dormir de ${childFullName(child)}.`
         : 'Hora de começar o ritual de dormir.',

@@ -1,4 +1,4 @@
-# Servidor de histórias — Lumi
+# Servidor de histórias — Âmi
 
 Servidor local mínimo, sem dependências externas. Guarda a chave da API da
 Anthropic e gera as histórias personalizadas — o app nunca fala direto com a

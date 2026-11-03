@@ -37,14 +37,14 @@ export default function RootNavigator() {
           tabBarInactiveTintColor: colors.textMuted,
           tabBarStyle: { backgroundColor: colors.card, borderTopColor: colors.border },
           tabBarIcon: () =>
-            route.name === 'Lumi' ? (
+            route.name === 'Âmi' ? (
               <Image source={mascoteIcon} style={{ width: 22, height: 22 }} resizeMode="contain" />
             ) : (
               <Text style={{ fontSize: 18 }}>{ICONS[route.name]}</Text>
             ),
         })}
       >
-        <Tab.Screen name="Lumi" component={AssistantScreen} />
+        <Tab.Screen name="Âmi" component={AssistantScreen} />
         <Tab.Screen name="Perfis" component={ChildrenProfileScreen} />
         <Tab.Screen name="Cuidadores" component={CaregiversScreen} />
         <Tab.Screen name="Agenda" component={AgendaScreen} />

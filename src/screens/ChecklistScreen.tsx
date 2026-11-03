@@ -22,8 +22,8 @@ export default function ChecklistScreen() {
   const route = useRoute<any>();
   const highlightId: string | undefined = route.params?.highlightId;
   const [templates, setTemplates] = useState<ChecklistTemplate[]>([]);
-  const [nome, setNome] = useState('');
-  const [tipo, setTipo] = useState('');
+  const [nome, setNome] = useState(route.params?.nomeSugerido || '');
+  const [tipo, setTipo] = useState(route.params?.tipoSugerido || '');
   const [novoItem, setNovoItem] = useState<Record<string, string>>({});
 
   useFocusEffect(

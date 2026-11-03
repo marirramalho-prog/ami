@@ -1,7 +1,7 @@
 import { ChatTema } from '../types/chat';
 
 // Categorização por palavra-chave — sem IA nesta etapa (só a estrutura
-// visual de histórico). Quando a Lumi ganhar respostas de verdade, esse
+// visual de histórico). Quando a Âmi ganhar respostas de verdade, esse
 // arquivo pode virar só o rótulo/exibição, e a categorização passa a vir
 // do modelo.
 const REGRAS: { tema: ChatTema; palavras: string[] }[] = [
@@ -37,7 +37,7 @@ export const TEMA_LABEL: Record<ChatTema, string> = {
   outros: 'Outros assuntos',
 };
 
-// Resposta fixa por tema — a Lumi ainda não responde de verdade nesta
+// Resposta fixa por tema — a Âmi ainda não responde de verdade nesta
 // etapa (só a estrutura de chat/histórico), mas a resposta já orienta pra
 // aba certa, como os atalhos antigos faziam.
 const RESPOSTA_POR_TEMA: Record<ChatTema, string> = {
