@@ -11,7 +11,7 @@ export type ChatTema =
 
 export interface ChatMessage {
   id: string;
-  from: 'lumi' | 'mae';
+  from: 'ami' | 'mae';
   text: string;
   criadoEm: string; // ISO
 }

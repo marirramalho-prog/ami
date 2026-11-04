@@ -1,10 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Caregiver } from '../types/caregiver';
+import { readWithLegacyKey } from './legacyMigration';
 
-const STORAGE_KEY = '@lumi/caregivers';
+const STORAGE_KEY = '@ami/caregivers';
 
 export async function loadCaregivers(): Promise<Caregiver[]> {
-  const raw = await AsyncStorage.getItem(STORAGE_KEY);
+  const raw = await readWithLegacyKey(STORAGE_KEY, '@lumi/caregivers');
   return raw ? JSON.parse(raw) : [];
 }
 

@@ -107,9 +107,9 @@ export default function AssistantScreen() {
       text: textoEnviado,
       criadoEm: new Date().toISOString(),
     };
-    const respostaLumi: ChatMessage = {
-      id: `${Date.now()}-lumi`,
-      from: 'lumi',
+    const respostaAmi: ChatMessage = {
+      id: `${Date.now()}-ami`,
+      from: 'ami',
       text: respostaPadrao(tema),
       criadoEm: new Date().toISOString(),
     };
@@ -118,7 +118,7 @@ export default function AssistantScreen() {
       ...ativa,
       tema,
       titulo,
-      mensagens: [...ativa.mensagens, mensagemMae, respostaLumi],
+      mensagens: [...ativa.mensagens, mensagemMae, respostaAmi],
       atualizadoEm: new Date().toISOString(),
     });
   }
@@ -183,7 +183,7 @@ export default function AssistantScreen() {
                 </Text>
                 {ultima && (
                   <Text style={styles.conversaPreview} numberOfLines={1}>
-                    {ultima.from === 'lumi' ? 'Âmi: ' : 'Você: '}
+                    {ultima.from === 'ami' ? 'Âmi: ' : 'Você: '}
                     {ultima.text}
                   </Text>
                 )}
@@ -223,21 +223,21 @@ export default function AssistantScreen() {
 
       <ScrollView contentContainerStyle={styles.chatContent}>
         {mensagens.length === 0 && (
-          <View style={[styles.bubble, styles.bubbleLumi]}>
-            <Text style={styles.bubbleTextLumi}>{GREETING}</Text>
+          <View style={[styles.bubble, styles.bubbleAmi]}>
+            <Text style={styles.bubbleTextAmi}>{GREETING}</Text>
           </View>
         )}
         {mensagens.length === 0 && semFilhos && (
-          <View style={[styles.bubble, styles.bubbleLumi]}>
-            <Text style={styles.bubbleTextLumi}>{FALLBACK_NO_CHILD}</Text>
+          <View style={[styles.bubble, styles.bubbleAmi]}>
+            <Text style={styles.bubbleTextAmi}>{FALLBACK_NO_CHILD}</Text>
           </View>
         )}
         {mensagens.map((message) => (
           <View
             key={message.id}
-            style={[styles.bubble, message.from === 'lumi' ? styles.bubbleLumi : styles.bubbleMae]}
+            style={[styles.bubble, message.from === 'ami' ? styles.bubbleAmi : styles.bubbleMae]}
           >
-            <Text style={message.from === 'lumi' ? styles.bubbleTextLumi : styles.bubbleTextMae}>
+            <Text style={message.from === 'ami' ? styles.bubbleTextAmi : styles.bubbleTextMae}>
               {message.text}
             </Text>
           </View>
@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
-  bubbleLumi: {
+  bubbleAmi: {
     alignSelf: 'flex-start',
     backgroundColor: colors.card,
     borderWidth: 1,
@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
     backgroundColor: colors.primary,
   },
-  bubbleTextLumi: { color: colors.text, fontSize: 14, lineHeight: 20 },
+  bubbleTextAmi: { color: colors.text, fontSize: 14, lineHeight: 20 },
   bubbleTextMae: { color: colors.text, fontSize: 14, lineHeight: 20, fontWeight: '600' },
   inputRow: {
     flexDirection: 'row',

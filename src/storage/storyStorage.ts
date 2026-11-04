@@ -1,12 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CustomCharacter, Story, StorySeries } from '../types/story';
+import { readWithLegacyKey } from './legacyMigration';
 
-const CHARACTERS_KEY = '@lumi/story_characters';
-const STORIES_KEY = '@lumi/stories';
-const SERIES_KEY = '@lumi/story_series';
+const CHARACTERS_KEY = '@ami/story_characters';
+const STORIES_KEY = '@ami/stories';
+const SERIES_KEY = '@ami/story_series';
 
 export async function loadCharacters(): Promise<CustomCharacter[]> {
-  const raw = await AsyncStorage.getItem(CHARACTERS_KEY);
+  const raw = await readWithLegacyKey(CHARACTERS_KEY, '@lumi/story_characters');
   return raw ? JSON.parse(raw) : [];
 }
 
@@ -15,7 +16,7 @@ export async function saveCharacters(characters: CustomCharacter[]): Promise<voi
 }
 
 export async function loadStories(): Promise<Story[]> {
-  const raw = await AsyncStorage.getItem(STORIES_KEY);
+  const raw = await readWithLegacyKey(STORIES_KEY, '@lumi/stories');
   return raw ? JSON.parse(raw) : [];
 }
 
@@ -24,7 +25,7 @@ export async function saveStories(stories: Story[]): Promise<void> {
 }
 
 export async function loadSeries(): Promise<StorySeries[]> {
-  const raw = await AsyncStorage.getItem(SERIES_KEY);
+  const raw = await readWithLegacyKey(SERIES_KEY, '@lumi/story_series');
   return raw ? JSON.parse(raw) : [];
 }
 

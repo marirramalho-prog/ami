@@ -8,7 +8,6 @@ import {
   ScrollView,
   StyleSheet,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { colors } from '../theme/colors';
@@ -23,7 +22,7 @@ import ChildSelector from './ChildSelector';
 import DateFields from './DateFields';
 import HoraInput from './HoraInput';
 
-type Passo = 'escolha' | 'carregando' | 'revisao' | 'erro';
+type Passo = 'escolha' | 'carregando' | 'revisao' | 'posSalvar' | 'erro';
 
 interface ReviewItem {
   chave: string;
@@ -70,11 +69,19 @@ export default function ImportEventModal({ visible, onClose, children, onAddEven
   const [passo, setPasso] = useState<Passo>('escolha');
   const [erro, setErro] = useState('');
   const [itens, setItens] = useState<ReviewItem[]>([]);
+  const [aniversariosPendentes, setAniversariosPendentes] = useState<ReviewItem[]>([]);
+  const [lembretesCriados, setLembretesCriados] = useState(false);
+  const [primeiroSalvo, setPrimeiroSalvo] = useState<ReviewItem | null>(null);
+  const [salvando, setSalvando] = useState(false);
 
   function reset() {
     setPasso('escolha');
     setErro('');
     setItens([]);
+    setAniversariosPendentes([]);
+    setLembretesCriados(false);
+    setPrimeiroSalvo(null);
+    setSalvando(false);
   }
 
   function handleClose() {
@@ -127,108 +134,90 @@ export default function ImportEventModal({ visible, onClose, children, onAddEven
     return item.evento.confianca[campo] === 'baixa';
   }
 
+  const selecionados = itens.filter((it) => it.selecionado);
+  const podeConfirmar =
+    selecionados.length > 0 &&
+    selecionados.every((it) => it.evento.titulo.trim() && isValidDatePart(it.evento.data));
+
   async function handleConfirmar() {
-    const selecionados = itens.filter((it) => it.selecionado);
-    if (selecionados.length === 0) return;
+    if (!podeConfirmar || salvando) return;
+    setSalvando(true);
 
-    const invalido = selecionados.find(
-      (it) => !it.evento.titulo.trim() || !isValidDatePart(it.evento.data),
-    );
-    if (invalido) {
-      Alert.alert('Confira os dados', 'Todo compromisso selecionado precisa de título e data válida.');
-      return;
+    try {
+      const novosEventos: AgendaEvent[] = selecionados.map((it) => ({
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        titulo: it.evento.titulo.trim(),
+        data: it.evento.data,
+        hora: it.evento.horaInicio.trim(),
+        horaFim: it.evento.horaFim.trim(),
+        local: it.evento.local.trim(),
+        childIds: it.childIds,
+        caregiverIds: [],
+        lembrete: false,
+        notificationId: null,
+      }));
+
+      await onAddEvents(novosEventos);
+
+      setAniversariosPendentes(selecionados.filter((it) => ehAniversario(it.evento)));
+      setPrimeiroSalvo(selecionados[0]);
+      setLembretesCriados(false);
+      setPasso('posSalvar');
+    } finally {
+      setSalvando(false);
     }
-
-    const novosEventos: AgendaEvent[] = selecionados.map((it) => ({
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      titulo: it.evento.titulo.trim(),
-      data: it.evento.data,
-      hora: it.evento.horaInicio.trim(),
-      horaFim: it.evento.horaFim.trim(),
-      local: it.evento.local.trim(),
-      childIds: it.childIds,
-      caregiverIds: [],
-      lembrete: false,
-      notificationId: null,
-    }));
-
-    await onAddEvents(novosEventos);
-
-    const aniversarios = selecionados.filter((it) => ehAniversario(it.evento));
-    if (aniversarios.length > 0) {
-      Alert.alert(
-        'Lembrete de aniversário',
-        'Quer um lembrete pra confirmar presença e outro pra comprar o presente?',
-        [
-          { text: 'Não, obrigada', style: 'cancel', onPress: () => finalizar(selecionados[0]) },
-          {
-            text: 'Sim, criar lembretes',
-            onPress: async () => {
-              const lembretes: AgendaEvent[] = aniversarios.flatMap((it) => {
-                const dataEvento = new Date(
-                  Number(it.evento.data.ano),
-                  Number(it.evento.data.mes) - 1,
-                  Number(it.evento.data.dia),
-                );
-                const dataLembrete = addDays(dataEvento, -7);
-                const data = {
-                  dia: String(dataLembrete.getDate()).padStart(2, '0'),
-                  mes: String(dataLembrete.getMonth() + 1).padStart(2, '0'),
-                  ano: String(dataLembrete.getFullYear()),
-                };
-                return [
-                  {
-                    id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-                    titulo: `Confirmar presença — ${it.evento.titulo.trim()}`,
-                    data,
-                    hora: '09:00',
-                    horaFim: '',
-                    local: '',
-                    childIds: it.childIds,
-                    caregiverIds: [],
-                    lembrete: true,
-                    notificationId: null,
-                  },
-                  {
-                    id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-                    titulo: `Comprar presente — ${it.evento.titulo.trim()}`,
-                    data,
-                    hora: '09:00',
-                    horaFim: '',
-                    local: '',
-                    childIds: it.childIds,
-                    caregiverIds: [],
-                    lembrete: true,
-                    notificationId: null,
-                  },
-                ];
-              });
-              await onAddEvents(lembretes);
-              finalizar(selecionados[0]);
-            },
-          },
-        ],
-      );
-      return;
-    }
-
-    finalizar(selecionados[0]);
   }
 
-  function finalizar(primeiro: ReviewItem) {
-    Alert.alert('Compromisso importado', 'Quer criar um checklist pra esse compromisso?', [
-      { text: 'Não, obrigada', style: 'cancel', onPress: handleClose },
-      {
-        text: 'Criar checklist',
-        onPress: () => {
-          handleClose();
-          navigation.navigate('Checklist', {
-            nomeSugerido: primeiro.evento.titulo.trim(),
-            tipoSugerido: primeiro.evento.tipo.trim(),
-          });
+  async function handleCriarLembretes() {
+    const lembretes: AgendaEvent[] = aniversariosPendentes.flatMap((it) => {
+      const dataEvento = new Date(
+        Number(it.evento.data.ano),
+        Number(it.evento.data.mes) - 1,
+        Number(it.evento.data.dia),
+      );
+      const dataLembrete = addDays(dataEvento, -7);
+      const data = {
+        dia: String(dataLembrete.getDate()).padStart(2, '0'),
+        mes: String(dataLembrete.getMonth() + 1).padStart(2, '0'),
+        ano: String(dataLembrete.getFullYear()),
+      };
+      return [
+        {
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          titulo: `Confirmar presença — ${it.evento.titulo.trim()}`,
+          data,
+          hora: '09:00',
+          horaFim: '',
+          local: '',
+          childIds: it.childIds,
+          caregiverIds: [],
+          lembrete: true,
+          notificationId: null,
         },
-      },
-    ]);
+        {
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          titulo: `Comprar presente — ${it.evento.titulo.trim()}`,
+          data,
+          hora: '09:00',
+          horaFim: '',
+          local: '',
+          childIds: it.childIds,
+          caregiverIds: [],
+          lembrete: true,
+          notificationId: null,
+        },
+      ];
+    });
+    await onAddEvents(lembretes);
+    setLembretesCriados(true);
+  }
+
+  function handleCriarChecklist() {
+    if (!primeiroSalvo) return;
+    const nomeSugerido = primeiroSalvo.evento.titulo.trim();
+    const tipoSugerido = primeiroSalvo.evento.tipo.trim();
+    handleClose();
+    navigation.navigate('Checklist', { nomeSugerido, tipoSugerido });
   }
 
   return (
@@ -412,8 +401,53 @@ export default function ImportEventModal({ visible, onClose, children, onAddEven
               </View>
             ))}
 
-            <Pressable style={styles.confirmarBtn} onPress={handleConfirmar}>
-              <Text style={styles.confirmarTexto}>Confirmar e salvar na agenda</Text>
+            {!podeConfirmar && (
+              <Text style={styles.warning}>
+                Marque ao menos um compromisso e preencha título e data válida pra continuar.
+              </Text>
+            )}
+
+            <Pressable
+              style={[
+                styles.confirmarBtn,
+                (!podeConfirmar || salvando) && styles.confirmarBtnDesabilitado,
+              ]}
+              onPress={handleConfirmar}
+              disabled={!podeConfirmar || salvando}
+            >
+              <Text style={styles.confirmarTexto}>
+                {salvando ? 'Salvando…' : 'Confirmar e salvar na agenda'}
+              </Text>
+            </Pressable>
+          </View>
+        )}
+
+        {passo === 'posSalvar' && (
+          <View style={{ gap: 14 }}>
+            <Text style={styles.title}>Compromisso importado!</Text>
+
+            {aniversariosPendentes.length > 0 && (
+              <View style={{ gap: 8 }}>
+                <Text style={styles.helper}>
+                  Quer um lembrete pra confirmar presença e outro pra comprar o presente?
+                </Text>
+                {lembretesCriados ? (
+                  <Text style={styles.helper}>Lembretes criados ✔</Text>
+                ) : (
+                  <Pressable style={styles.opcaoBtn} onPress={handleCriarLembretes}>
+                    <Text style={styles.opcaoTexto}>Criar lembretes</Text>
+                  </Pressable>
+                )}
+              </View>
+            )}
+
+            <Text style={styles.helper}>Quer criar um checklist pra esse compromisso?</Text>
+            <Pressable style={styles.opcaoBtn} onPress={handleCriarChecklist}>
+              <Text style={styles.opcaoTexto}>Criar checklist</Text>
+            </Pressable>
+
+            <Pressable style={styles.confirmarBtn} onPress={handleClose}>
+              <Text style={styles.confirmarTexto}>Fechar</Text>
             </Pressable>
           </View>
         )}
@@ -495,5 +529,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
   },
+  confirmarBtnDesabilitado: { opacity: 0.5 },
   confirmarTexto: { color: colors.text, fontWeight: '700', fontSize: 15 },
 });
