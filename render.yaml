@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: ami-story-server
+    runtime: node
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false

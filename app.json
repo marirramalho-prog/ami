@@ -2,6 +2,7 @@
   "expo": {
     "name": "Âmi",
     "slug": "ami-app",
+    "owner": "marirramalho",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -12,16 +13,21 @@
       "backgroundColor": "#F5F4F8"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.amiapp.ami"
     },
     "android": {
+      "package": "com.amiapp.ami",
       "adaptiveIcon": {
         "backgroundColor": "#DED4EC",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -35,6 +41,11 @@
           "cameraPermission": "A Âmi usa a câmera pra fotografar convites e documentos e importar compromissos da agenda."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "6074972c-a008-491f-9ca3-c8bd311afef9"
+      }
+    }
   }
 }
