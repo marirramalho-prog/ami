@@ -500,7 +500,12 @@ export default function SleepScreen() {
                       <Text style={styles.link}>📖 abrir</Text>
                     </Pressable>
                   )}
-                  <Pressable onPress={() => handleRemovePasso(passo.id)}>
+                  <Pressable
+                    style={styles.itemRemoveButton}
+                    onPress={() => handleRemovePasso(passo.id)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Remover passo "${passo.texto}" do ritual`}
+                  >
                     <Text style={styles.itemRemove}>×</Text>
                   </Pressable>
                 </View>
@@ -595,7 +600,12 @@ export default function SleepScreen() {
                     <Text style={styles.despertarDetalhes}>{d.detalhes}</Text>
                   ) : null}
                 </View>
-                <Pressable onPress={() => handleRemoveDespertar(d.id)}>
+                <Pressable
+                  style={styles.itemRemoveButton}
+                  onPress={() => handleRemoveDespertar(d.id)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Remover este despertar noturno"
+                >
                   <Text style={styles.itemRemove}>×</Text>
                 </Pressable>
               </View>
@@ -742,7 +752,13 @@ const styles = StyleSheet.create({
   checkmark: { fontSize: 12, color: colors.text, fontWeight: '700' },
   passoText: { flex: 1, fontSize: 14, color: colors.text },
   passoTextDone: { textDecorationLine: 'line-through', color: colors.textMuted },
-  itemRemove: { fontSize: 16, color: colors.textMuted, paddingHorizontal: 4 },
+  itemRemoveButton: {
+    minHeight: 44,
+    minWidth: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  itemRemove: { fontSize: 16, color: colors.textMuted },
   link: { fontSize: 12, color: colors.text, fontWeight: '600' },
   despertarCard: {
     flexDirection: 'row',
