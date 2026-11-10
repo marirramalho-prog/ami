@@ -327,7 +327,9 @@ export default function StoriesScreen() {
           <Text style={styles.sectionTitle}>Série e contexto</Text>
 
           <View style={styles.switchRow}>
-            <Text style={styles.label}>Criar como série (mesmos personagens/cenário)</Text>
+            <Text style={[styles.label, styles.switchLabel]}>
+              Criar como série (mesmos personagens/cenário)
+            </Text>
             <Switch
               value={prefs.serie}
               onValueChange={(v) => updatePrefs('serie', v)}
@@ -465,7 +467,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   addButtonText: { fontSize: 18, fontWeight: '700', color: colors.text },
-  switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  switchLabel: { flex: 1 },
   button: {
     backgroundColor: colors.primary,
     borderRadius: 10,
