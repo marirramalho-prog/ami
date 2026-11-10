@@ -86,7 +86,7 @@ export default function AgendaScreen() {
 
   async function handleAdd() {
     if (!form.titulo.trim()) return;
-    if (!isValidDatePart({ dia: form.dia, mes: form.mes, ano: form.ano })) return;
+    if (!isValidDatePart({ dia: form.dia, mes: form.mes, ano: form.ano }, true)) return;
 
     const base: AgendaEvent = {
       id: Date.now().toString(),
@@ -144,7 +144,7 @@ export default function AgendaScreen() {
     await saveEvents(updated);
   }
 
-  const dataValida = isValidDatePart({ dia: form.dia, mes: form.mes, ano: form.ano });
+  const dataValida = isValidDatePart({ dia: form.dia, mes: form.mes, ano: form.ano }, true);
   const podeAdicionar = form.titulo.trim().length > 0 && dataValida;
 
   function handleAnterior() {

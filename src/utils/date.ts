@@ -4,7 +4,13 @@ export interface DatePart {
   ano: string;
 }
 
-export function isValidDatePart({ dia, mes, ano }: DatePart): boolean {
+// Pra datas de nascimento (padrão): não aceita ano futuro. Pra data de
+// evento/agenda, passe permitirAnoFuturo — passeios, viagens e aniversários
+// costumam ser marcados com bastante antecedência.
+export function isValidDatePart(
+  { dia, mes, ano }: DatePart,
+  permitirAnoFuturo = false,
+): boolean {
   const d = Number(dia);
   const m = Number(mes);
   const y = Number(ano);
@@ -13,7 +19,8 @@ export function isValidDatePart({ dia, mes, ano }: DatePart): boolean {
   if (d < 1 || d > 31) return false;
   // Limite bem folgado (não só filhos usam essa validação — cuidadores como
   // avós podem ter nascido bem antes de 1990).
-  if (y < 1900 || y > new Date().getFullYear()) return false;
+  const anoMaximo = permitirAnoFuturo ? new Date().getFullYear() + 15 : new Date().getFullYear();
+  if (y < 1900 || y > anoMaximo) return false;
   return true;
 }
 
