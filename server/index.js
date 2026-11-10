@@ -30,6 +30,7 @@ function buildPrompt(prefs) {
     'Escreva uma história infantil em português do Brasil, seguindo estas preferências:',
     prefs.personagens.length ? `Personagens: ${prefs.personagens.join(', ')}.` : '',
     prefs.arco ? `O personagem principal é ${prefs.arco}.` : '',
+    prefs.vilao ? `O vilão da história se chama ${prefs.vilao}.` : '',
     prefs.papelCrianca ? `Papel da criança na história: ${prefs.papelCrianca}.` : '',
     prefs.relacao ? `Relação entre os personagens: ${prefs.relacao}.` : '',
     prefs.tema ? `Tema: ${prefs.tema}.` : '',
