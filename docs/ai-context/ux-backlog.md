@@ -1,22 +1,19 @@
 # Backlog de UX — Âmi
 
-Preenchido de verdade na Fase 8 (auditoria completa). Por ora, só os itens já observados durante o mapeamento (Fase 2), sem prioridade atribuída ainda — nenhum foi aprovado para implementação.
+**Auditoria completa (Fase 8) concluída em 2026-11-10 — 9/9 telas cobertas.** Nenhum item abaixo foi implementado; tudo pendente de aprovação da Mari.
 
-| Item | Onde | Observação | Status |
-|---|---|---|---|
-| Telas Sono e Cuidados ficam vazias e sem ação possível sem filho cadastrado | `SleepScreen.tsx`, `CareScreen.tsx` | Só mostram um texto pedindo pra cadastrar em Perfis, sem link/atalho direto pra lá | Observado, não avaliado |
-| Ausência de tokens de tipografia/espaçamento | Todas as telas (`StyleSheet` local) | Números repetidos (fontSize, padding, borderRadius) sem fonte única — ver `design-system.md` | Observado, não avaliado |
-| Fonte real de dados do "Descobrir" ainda não decidida | `DiscoverScreen.tsx` | Decisão de produto pendente da Mari, não é bug de UX | Fora do escopo de UX por enquanto |
+| # | Item | Onde | Criticidade | Esforço | Confiança | Status |
+|---|---|---|---|---|---|---|
+| 1 | Sono e Cuidados ficam bloqueadas sem filho cadastrado, sem link direto pra Perfis | `SleepScreen.tsx`, `CareScreen.tsx` | **P1** | Baixo | Alta | Pendente de aprovação |
+| 2 | Rótulos da barra de abas cortam em largura mobile (375px) | `RootNavigator.tsx` | P2 | Baixo | Alta | Pendente de aprovação |
+| 3 | Área de toque dos chips abaixo de ~44pt (componente compartilhado) | `ChipSelector.tsx:64` | P2 | Baixo | Alta | Pendente de aprovação |
+| 4 | Botões "remover item" (`×`) sem `accessibilityLabel` | `SleepScreen.tsx:497`, `ChecklistScreen.tsx:183`, `TagInput.tsx:50` | P2 | Baixo | Alta | Pendente de aprovação |
+| 5 | Quase nenhum `accessibilityLabel` no app (só 2 ocorrências, em `AssistantScreen.tsx`) | `src/` inteiro | P2 | Médio | Média | Pendente de aprovação — recomenda levantamento dedicado |
+| 6 | Navegação direta por URL na versão web sempre volta pra "Âmi" | Roteamento web (Expo Router/React Navigation) | P3 | Médio | Média | Pendente — só relevante se web virar canal real |
+| 7 | Ausência de tokens de tipografia/espaçamento | Todas as telas (`StyleSheet` local) | — | — | — | Documentado em `design-system.md`, não quantificado como item de criticidade |
+| 8 | Fonte real de dados do "Descobrir" ainda não decidida | `DiscoverScreen.tsx` | — | — | — | Decisão de produto da Mari, fora do escopo de UX |
 
-## Auditoria parcial — tela Descobrir (2026-11-10, teste de validação da skill `ux-audit-b2c`)
-
-| Tela | Elemento | Problema | Evidência | Princípio de UX | Impacto | Criticidade | Esforço | Confiança | Recomendação |
-|---|---|---|---|---|---|---|---|---|---|
-| Descobrir | Barra de abas inferior | Nomes das abas cortam com reticências em largura mobile (375px) | Screenshot em viewport 375×812 | Legibilidade / navegação | Mãe pode não identificar a aba certa de relance | P2 | Baixo | Alta | Encurtar rótulos ou reduzir padding lateral da tab bar |
-| Descobrir | Chips de categoria (`DiscoverScreen.tsx:115-122`) | Área de toque abaixo de ~44pt recomendados | Leitura de código | Facilidade de interação | Risco de toque errado, uso com uma mão | P3 | Baixo | Média | Aumentar `paddingVertical` dos chips |
-| Descobrir | Navegação direta por URL na versão web | Recarregar numa URL de aba específica sempre volta pra "Âmi" | Teste manual de navegação | Navegação/encontrabilidade | Baixo — só afeta web, uso real é mobile | P3 | Médio | Média | Avaliar só se web virar canal de uso real |
-
-Esta auditoria cobriu só a tela Descobrir, como teste da skill — não é a auditoria completa da Fase 8, que ainda cobre as outras 8 telas.
+**Ponto positivo observado** (não é backlog, é reforço do que já funciona bem): a mensagem "Data incompleta ou inválida." é reaproveitada de forma consistente entre `AgendaScreen`, `CaregiversScreen` e `ChildrenProfileScreen`, via componente `DateFields` compartilhado — exatamente o padrão que `design-system-b2c` deve proteger.
 
 ## Como este arquivo vai crescer
 
