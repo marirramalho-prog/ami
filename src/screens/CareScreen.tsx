@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { colors } from '../theme/colors';
 import { Child, childFullName } from '../types/child';
 import { CareMilestone, CategoriaCuidado } from '../types/careMilestone';
@@ -53,6 +53,7 @@ interface MarcoCalculado {
 }
 
 export default function CareScreen() {
+  const navigation = useNavigation<any>();
   const [children, setChildren] = useState<Child[]>([]);
   const [childId, setChildId] = useState<string | null>(null);
   const [filtro, setFiltro] = useState<CategoriaCuidado | 'todos'>('todos');
@@ -87,6 +88,13 @@ export default function CareScreen() {
         <Text style={styles.empty}>
           Cadastre um perfil de filho(a) na aba Perfis pra ver o calendário de cuidados.
         </Text>
+        <Pressable
+          onPress={() => navigation.navigate('Perfis')}
+          accessibilityRole="button"
+          accessibilityLabel="Ir para a aba Perfis"
+        >
+          <Text style={[styles.empty, styles.link]}>👶 ir para Perfis</Text>
+        </Pressable>
       </View>
     );
   }
@@ -201,6 +209,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, fontWeight: '700', color: colors.text },
   subtitle: { fontSize: 13, color: colors.textMuted, marginTop: 4 },
   empty: { textAlign: 'center', color: colors.textMuted, marginTop: 12 },
+  link: { color: colors.text, fontWeight: '600', marginTop: 12 },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
   chip: {
     borderWidth: 1,

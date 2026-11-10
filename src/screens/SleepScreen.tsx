@@ -317,6 +317,13 @@ export default function SleepScreen() {
         <Text style={styles.empty}>
           Cadastre um perfil de filho(a) na aba Perfis para configurar a rotina de sono.
         </Text>
+        <Pressable
+          onPress={() => navigation.navigate('Perfis')}
+          accessibilityRole="button"
+          accessibilityLabel="Ir para a aba Perfis"
+        >
+          <Text style={[styles.link, { marginTop: 12 }]}>👶 ir para Perfis</Text>
+        </Pressable>
       </View>
     );
   }
