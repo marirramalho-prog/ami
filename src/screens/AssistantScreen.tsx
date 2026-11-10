@@ -287,6 +287,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 10,
     paddingVertical: 5,
+    minHeight: 44,
+    justifyContent: 'center',
   },
   trocarConversaTexto: { fontSize: 11, color: colors.textMuted, fontWeight: '600' },
   chatContent: { paddingHorizontal: 20, paddingBottom: 12, gap: 10, flexGrow: 1 },
