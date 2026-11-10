@@ -15,6 +15,7 @@ import { colors } from '../theme/colors';
 import { Caregiver } from '../types/caregiver';
 import { loadCaregivers, saveCaregivers } from '../storage/caregiverStorage';
 import { calcularIdade, isValidDatePart } from '../utils/date';
+import { confirmAction } from '../utils/confirm';
 import ChipSelector from '../components/ChipSelector';
 import DateFields from '../components/DateFields';
 
@@ -99,11 +100,18 @@ export default function CaregiversScreen() {
     setForm(emptyForm);
   }
 
-  async function handleRemove(id: string) {
-    const updated = caregivers.filter((c) => c.id !== id);
-    setCaregivers(updated);
-    await saveCaregivers(updated);
-    if (editingId === id) handleCancelEdit();
+  function handleRemove(id: string) {
+    const caregiver = caregivers.find((c) => c.id === id);
+    confirmAction(
+      'Remover cuidador?',
+      `"${caregiver?.nomeCompleto || 'este cuidador'}" será removido. Essa ação não pode ser desfeita.`,
+      async () => {
+        const updated = caregivers.filter((c) => c.id !== id);
+        setCaregivers(updated);
+        await saveCaregivers(updated);
+        if (editingId === id) handleCancelEdit();
+      },
+    );
   }
 
   const dataValida = isValidDatePart({ dia: form.dia, mes: form.mes, ano: form.ano });
