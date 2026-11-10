@@ -455,6 +455,7 @@ export default function SleepScreen() {
                   <Switch
                     value={schedule.tiraSoneca}
                     onValueChange={(v) => updateSchedule('tiraSoneca', v)}
+                    accessibilityLabel="Tira soneca"
                   />
                 </View>
                 {schedule.tiraSoneca && (

@@ -248,7 +248,12 @@ export default function StoriesScreen() {
               onChangeText={setNovoPersonagem}
               onSubmitEditing={handleAddCustomCharacter}
             />
-            <Pressable style={styles.addButton} onPress={handleAddCustomCharacter}>
+            <Pressable
+              style={styles.addButton}
+              onPress={handleAddCustomCharacter}
+              accessibilityRole="button"
+              accessibilityLabel="Adicionar novo personagem"
+            >
               <Text style={styles.addButtonText}>+</Text>
             </Pressable>
           </View>
@@ -385,6 +390,7 @@ export default function StoriesScreen() {
             <Switch
               value={prefs.serie}
               onValueChange={(v) => updatePrefs('serie', v)}
+              accessibilityLabel="Criar como série, com os mesmos personagens e cenário"
             />
           </View>
 

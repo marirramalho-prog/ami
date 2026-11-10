@@ -39,7 +39,12 @@ export default function TagInput({ label, placeholder, values, onChange }: Props
           onSubmitEditing={handleAdd}
           returnKeyType="done"
         />
-        <Pressable style={styles.addButton} onPress={handleAdd}>
+        <Pressable
+          style={styles.addButton}
+          onPress={handleAdd}
+          accessibilityRole="button"
+          accessibilityLabel={`Adicionar ${label.toLowerCase()}`}
+        >
           <Text style={styles.addButtonText}>+</Text>
         </Pressable>
       </View>

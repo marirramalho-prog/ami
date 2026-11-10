@@ -251,6 +251,8 @@ export default function ChecklistScreen() {
                 <Pressable
                   style={styles.addItemButton}
                   onPress={() => handleAddItem(template.id)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Adicionar item ao checklist"
                 >
                   <Text style={styles.addItemButtonText}>+</Text>
                 </Pressable>

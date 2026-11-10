@@ -233,6 +233,8 @@ export default function CaregiversScreen() {
           <Pressable
             style={[styles.toggleChip, form.principal && styles.toggleChipSelected]}
             onPress={() => updateForm('principal', !form.principal)}
+            accessibilityRole="switch"
+            accessibilityState={{ checked: form.principal }}
           >
             <Text style={[styles.toggleChipText, form.principal && styles.toggleChipTextSelected]}>
               Esse sou eu (uso principal do app)

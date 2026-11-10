@@ -5,6 +5,17 @@ import { colors } from '../theme/colors';
 // Placeholder até existir um conjunto de avatares ilustrados da marca.
 export const AVATAR_OPTIONS = ['🦄', '🌟', '🦋', '🐰', '🐻', '🌈', '🐱', '🦊'];
 
+const AVATAR_NAMES: Record<string, string> = {
+  '🦄': 'Unicórnio',
+  '🌟': 'Estrela',
+  '🦋': 'Borboleta',
+  '🐰': 'Coelho',
+  '🐻': 'Urso',
+  '🌈': 'Arco-íris',
+  '🐱': 'Gato',
+  '🦊': 'Raposa',
+};
+
 const BACKGROUNDS = [
   colors.lilasSuave,
   colors.azulClaro,
@@ -33,6 +44,9 @@ export default function AvatarPicker({ value, onChange }: Props) {
                 { backgroundColor: BACKGROUNDS[index % BACKGROUNDS.length] },
                 selected && styles.selected,
               ]}
+              accessibilityRole="button"
+              accessibilityLabel={`Avatar ${AVATAR_NAMES[emoji] || emoji}`}
+              accessibilityState={{ selected }}
             >
               <Text style={styles.emoji}>{emoji}</Text>
             </Pressable>
