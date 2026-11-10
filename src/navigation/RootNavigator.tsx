@@ -27,6 +27,16 @@ const ICONS: Record<string, string> = {
   Cuidados: '🩺',
 };
 
+// Rótulos exibidos na barra de abas — abreviados só onde o nome
+// completo corta em telas estreitas (375px); o nome da rota em si
+// (usado por navigation.navigate) continua o nome completo.
+const TAB_LABELS: Record<string, string> = {
+  Cuidadores: 'Cuidad.',
+  Checklist: 'Check.',
+  Descobrir: 'Descobr.',
+  Histórias: 'Histór.',
+};
+
 export default function RootNavigator() {
   return (
     <NavigationContainer>
@@ -36,12 +46,18 @@ export default function RootNavigator() {
           tabBarActiveTintColor: colors.text,
           tabBarInactiveTintColor: colors.textMuted,
           tabBarStyle: { backgroundColor: colors.card, borderTopColor: colors.border },
+          tabBarItemStyle: { paddingHorizontal: 0, paddingTop: 2 },
           tabBarIcon: () =>
             route.name === 'Âmi' ? (
-              <Image source={mascoteIcon} style={{ width: 22, height: 22 }} resizeMode="contain" />
+              <Image source={mascoteIcon} style={{ width: 20, height: 20 }} resizeMode="contain" />
             ) : (
-              <Text style={{ fontSize: 18 }}>{ICONS[route.name]}</Text>
+              <Text style={{ fontSize: 16 }}>{ICONS[route.name]}</Text>
             ),
+          tabBarLabel: ({ color }) => (
+            <Text style={{ fontSize: 10, color, textAlign: 'center' }}>
+              {TAB_LABELS[route.name] || route.name}
+            </Text>
+          ),
         })}
       >
         <Tab.Screen name="Âmi" component={AssistantScreen} />
