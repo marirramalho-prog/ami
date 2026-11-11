@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text, Image } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, LinkingOptions } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { colors } from '../theme/colors';
 import mascoteIcon from '../../assets/mascote/avatar-circular-bust.png';
@@ -37,9 +37,30 @@ const TAB_LABELS: Record<string, string> = {
   Histórias: 'Histór.',
 };
 
+// Sem isso, a versão web só gera links corretos (href="/Agenda" etc.),
+// mas não sabe reconstruir o estado ao abrir/recarregar direto numa
+// URL — sempre caía na primeira aba. Mapeando cada rota explicitamente,
+// o próprio nome da URL volta a abrir a aba certa.
+const linking: LinkingOptions<any> = {
+  prefixes: [],
+  config: {
+    screens: {
+      Âmi: '',
+      Perfis: 'Perfis',
+      Cuidadores: 'Cuidadores',
+      Agenda: 'Agenda',
+      Checklist: 'Checklist',
+      Descobrir: 'Descobrir',
+      Histórias: 'Histórias',
+      Sono: 'Sono',
+      Cuidados: 'Cuidados',
+    },
+  },
+};
+
 export default function RootNavigator() {
   return (
-    <NavigationContainer>
+    <NavigationContainer linking={linking}>
       <Tab.Navigator
         screenOptions={({ route }) => ({
           headerShown: false,
