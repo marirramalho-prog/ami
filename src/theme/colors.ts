@@ -13,5 +13,6 @@ export const colors = {
   border: '#D1CDDA',
   card: '#FFFFFF',
   text: '#3A3550',
-  textMuted: '#7A7390',
+  // Escurecido de #7A7390 pra passar no mínimo AA (4.5:1) em texto normal — ux-backlog.md #17
+  textMuted: '#675F7A',
 } as const;
