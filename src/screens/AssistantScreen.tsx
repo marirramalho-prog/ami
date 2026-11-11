@@ -20,6 +20,7 @@ import { loadConversations, saveConversations } from '../storage/chatStorage';
 import { identificarTema, respostaPadrao, TEMA_LABEL } from '../utils/chatThemes';
 import mascoteIcon from '../../assets/mascote/avatar-circular-bust.png';
 import amiWordmark from '../../assets/marca/ami-wordmark.png';
+import ChatBubble from '../components/ChatBubble';
 
 const GREETING = 'Oi, eu sou a Âmi. Pode me contar o que você precisa.';
 const FALLBACK_NO_CHILD =
@@ -233,14 +234,13 @@ export default function AssistantScreen() {
           </View>
         )}
         {mensagens.map((message) => (
-          <View
+          <ChatBubble
             key={message.id}
-            style={[styles.bubble, message.from === 'ami' ? styles.bubbleAmi : styles.bubbleMae]}
-          >
-            <Text style={message.from === 'ami' ? styles.bubbleTextAmi : styles.bubbleTextMae}>
-              {message.text}
-            </Text>
-          </View>
+            text={message.text}
+            from={message.from}
+            bubbleStyle={[styles.bubble, message.from === 'ami' ? styles.bubbleAmi : styles.bubbleMae]}
+            textStyle={message.from === 'ami' ? styles.bubbleTextAmi : styles.bubbleTextMae}
+          />
         ))}
       </ScrollView>
 
