@@ -39,14 +39,25 @@ export default function TagInput({ label, placeholder, values, onChange }: Props
           onSubmitEditing={handleAdd}
           returnKeyType="done"
         />
-        <Pressable style={styles.addButton} onPress={handleAdd}>
+        <Pressable
+          style={styles.addButton}
+          onPress={handleAdd}
+          accessibilityRole="button"
+          accessibilityLabel={`Adicionar ${label.toLowerCase()}`}
+        >
           <Text style={styles.addButtonText}>+</Text>
         </Pressable>
       </View>
       {values.length > 0 && (
         <View style={styles.tags}>
           {values.map((value) => (
-            <Pressable key={value} style={styles.tag} onPress={() => handleRemove(value)}>
+            <Pressable
+              key={value}
+              style={styles.tag}
+              onPress={() => handleRemove(value)}
+              accessibilityRole="button"
+              accessibilityLabel={`Remover "${value}"`}
+            >
               <Text style={styles.tagText}>{value} ×</Text>
             </Pressable>
           ))}
@@ -98,6 +109,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 6,
+    minHeight: 44,
+    justifyContent: 'center',
   },
   tagText: {
     color: colors.text,

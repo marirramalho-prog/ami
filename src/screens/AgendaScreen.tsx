@@ -235,7 +235,11 @@ export default function AgendaScreen() {
 
           <View style={styles.switchRow}>
             <Text style={styles.label}>Lembrete por notificação push</Text>
-            <Switch value={form.lembrete} onValueChange={handleToggleLembrete} />
+            <Switch
+              value={form.lembrete}
+              onValueChange={handleToggleLembrete}
+              accessibilityLabel="Lembrete por notificação push"
+            />
           </View>
           {Platform.OS === 'web' && (
             <Text style={styles.helper}>

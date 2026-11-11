@@ -22,6 +22,7 @@ import TurnoSelector from '../components/TurnoSelector';
 import AtividadesEditor, { resumoDias } from '../components/AtividadesEditor';
 import DateFields from '../components/DateFields';
 import { syncChecklistsForAllChildren, removeChecklistsForChild } from '../utils/checklistSync';
+import { confirmAction } from '../utils/confirm';
 
 const TURNO_LABEL: Record<Exclude<Turno, ''>, string> = {
   manha: 'Manhã',
@@ -112,12 +113,19 @@ export default function ChildrenProfileScreen() {
     setForm(emptyForm);
   }
 
-  async function handleRemove(id: string) {
-    const updated = children.filter((c) => c.id !== id);
-    setChildren(updated);
-    await saveChildren(updated);
-    await removeChecklistsForChild(id);
-    if (editingId === id) handleCancelEdit();
+  function handleRemove(id: string) {
+    const child = children.find((c) => c.id === id);
+    confirmAction(
+      'Remover perfil?',
+      `O perfil de "${child ? childFullName(child) : 'este filho'}" e os checklists vinculados a ele serão removidos. Essa ação não pode ser desfeita.`,
+      async () => {
+        const updated = children.filter((c) => c.id !== id);
+        setChildren(updated);
+        await saveChildren(updated);
+        await removeChecklistsForChild(id);
+        if (editingId === id) handleCancelEdit();
+      },
+    );
   }
 
   const dataValida = isValidDatePart({ dia: form.dia, mes: form.mes, ano: form.ano });

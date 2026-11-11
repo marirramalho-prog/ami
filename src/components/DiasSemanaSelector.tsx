@@ -28,6 +28,9 @@ export default function DiasSemanaSelector({ value, onChange }: Props) {
               key={d.key}
               onPress={() => alternar(d.key)}
               style={[styles.diaBotao, ativo && styles.diaBotaoAtivo]}
+              accessibilityRole="button"
+              accessibilityLabel={d.nomeCompleto}
+              accessibilityState={{ selected: ativo }}
             >
               <Text style={[styles.diaBotaoTexto, ativo && styles.diaBotaoTextoAtivo]}>
                 {d.label}
