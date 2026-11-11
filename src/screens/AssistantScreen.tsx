@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,8 @@ import {
   Platform,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { colors } from '../theme/colors';
+import { Colors } from '../theme/colors';
+import { useThemeColors } from '../theme/useThemeColors';
 import { Child } from '../types/child';
 import { loadChildren } from '../storage/childrenStorage';
 import { ChatConversation, ChatMessage } from '../types/chat';
@@ -20,6 +21,7 @@ import { loadConversations, saveConversations } from '../storage/chatStorage';
 import { identificarTema, respostaPadrao, TEMA_LABEL } from '../utils/chatThemes';
 import mascoteIcon from '../../assets/mascote/avatar-circular-bust.png';
 import amiWordmark from '../../assets/marca/ami-wordmark.png';
+import ChatBubble from '../components/ChatBubble';
 
 const GREETING = 'Oi, eu sou a Âmi. Pode me contar o que você precisa.';
 const FALLBACK_NO_CHILD =
@@ -45,6 +47,8 @@ function labelData(iso: string): string {
 }
 
 export default function AssistantScreen() {
+  const colors = useThemeColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
   const [children, setChildren] = useState<Child[]>([]);
   const [conversas, setConversas] = useState<ChatConversation[]>([]);
   const [ativa, setAtiva] = useState<ChatConversation | null>(null);
@@ -233,14 +237,13 @@ export default function AssistantScreen() {
           </View>
         )}
         {mensagens.map((message) => (
-          <View
+          <ChatBubble
             key={message.id}
-            style={[styles.bubble, message.from === 'ami' ? styles.bubbleAmi : styles.bubbleMae]}
-          >
-            <Text style={message.from === 'ami' ? styles.bubbleTextAmi : styles.bubbleTextMae}>
-              {message.text}
-            </Text>
-          </View>
+            text={message.text}
+            from={message.from}
+            bubbleStyle={[styles.bubble, message.from === 'ami' ? styles.bubbleAmi : styles.bubbleMae]}
+            textStyle={message.from === 'ami' ? styles.bubbleTextAmi : styles.bubbleTextMae}
+          />
         ))}
       </ScrollView>
 
@@ -267,7 +270,8 @@ export default function AssistantScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: Colors) {
+  return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background, paddingTop: 60 },
   header: {
     flexDirection: 'row',
@@ -387,4 +391,5 @@ const styles = StyleSheet.create({
   empty: { textAlign: 'center', color: colors.textMuted, marginTop: 12 },
   novaConversaLink: { padding: 16, alignItems: 'center' },
   novaConversaLinkTexto: { color: colors.text, fontWeight: '600', fontSize: 13 },
-});
+  });
+}

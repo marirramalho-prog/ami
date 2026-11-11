@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { colors } from '../theme/colors';
+import { Colors } from '../theme/colors';
+import { useThemeColors } from '../theme/useThemeColors';
 import { Child } from '../types/child';
 import { Caregiver } from '../types/caregiver';
 import { AgendaEvent, ChecklistTemplate } from '../types/routine';
 import { addDays, isSameDay } from '../utils/calendarDates';
-import { getEventsForDate, TIPO_COR } from '../utils/calendarEvents';
+import { getEventsForDate, tipoCor } from '../utils/calendarEvents';
 
 interface Props {
   inicioSemana: Date;
@@ -29,7 +30,10 @@ export default function WeeklyCalendar({
   onRemoveEvento,
   onOpenChecklist,
 }: Props) {
+  const colors = useThemeColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
   const dias = Array.from({ length: 7 }, (_, i) => addDays(inicioSemana, i));
+  const TIPO_COR = tipoCor(colors);
   const hoje = new Date();
   const [selecionado, setSelecionado] = useState<Date>(hoje);
 
@@ -116,7 +120,8 @@ export default function WeeklyCalendar({
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: Colors) {
+  return StyleSheet.create({
   grid: { flexDirection: 'row' },
   celula: {
     flex: 1,
@@ -169,4 +174,5 @@ const styles = StyleSheet.create({
   itemSubtitulo: { fontSize: 12, color: colors.textMuted },
   remove: { fontSize: 11, color: colors.textMuted },
   checklistLink: { fontSize: 11, color: colors.text, fontWeight: '600', marginTop: 2 },
-});
+  });
+}

@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, Pressable, TextInput, StyleSheet } from 'react-native';
-import { colors } from '../theme/colors';
+import { Colors } from '../theme/colors';
+import { useThemeColors } from '../theme/useThemeColors';
 
 interface Props {
   label: string;
@@ -19,6 +20,8 @@ export default function ChipSelector({
   allowCustom,
   customPlaceholder,
 }: Props) {
+  const colors = useThemeColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
   const isCustomValue = value !== '' && !options.includes(value);
 
   return (
@@ -53,7 +56,8 @@ export default function ChipSelector({
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: Colors) {
+  return StyleSheet.create({
   label: { fontSize: 13, fontWeight: '600', color: colors.text },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
@@ -79,4 +83,5 @@ const styles = StyleSheet.create({
     backgroundColor: colors.brancoSuave,
     fontSize: 13,
   },
-});
+  });
+}

@@ -12,7 +12,8 @@ import {
   Platform,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { colors } from '../theme/colors';
+import { Colors } from '../theme/colors';
+import { useThemeColors } from '../theme/useThemeColors';
 import { Child, childFullName } from '../types/child';
 import { Caregiver } from '../types/caregiver';
 import { AgendaEvent } from '../types/routine';
@@ -66,6 +67,8 @@ const emptyPrefs: StoryPreferences = {
 };
 
 export default function StoriesScreen() {
+  const colors = useThemeColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
   const [children, setChildren] = useState<Child[]>([]);
   const [caregivers, setCaregivers] = useState<Caregiver[]>([]);
   const [customCharacters, setCustomCharacters] = useState<CustomCharacter[]>([]);
@@ -485,7 +488,8 @@ export default function StoriesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: Colors) {
+  return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   scrollContent: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 40 },
   title: { fontSize: 24, fontWeight: '700', color: colors.text, marginBottom: 16 },
@@ -568,4 +572,5 @@ const styles = StyleSheet.create({
   },
   historyMeta: { fontSize: 12, color: colors.textMuted },
   historyText: { fontSize: 13, color: colors.text },
-});
+  });
+}

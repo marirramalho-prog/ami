@@ -1,13 +1,16 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useMemo } from 'react';
 import { TextInput, StyleSheet, StyleProp, TextStyle } from 'react-native';
-import { colors } from '../theme/colors';
+import { Colors } from '../theme/colors';
+import { useThemeColors } from '../theme/useThemeColors';
+
+type TextInputRef = React.ComponentRef<typeof TextInput>;
 
 interface Props {
   value: string;
   onChangeText: (v: string) => void;
   placeholder?: string;
   // campo pra focar automaticamente assim que HH:MM for completado (opcional)
-  proximoCampoRef?: React.RefObject<TextInput | null>;
+  proximoCampoRef?: React.RefObject<TextInputRef | null>;
   style?: StyleProp<TextStyle>;
   editable?: boolean;
 }
@@ -16,8 +19,10 @@ interface Props {
 // (15 -> 15:) e avança pro próximo campo quando completa HH:MM.
 // Padrão pra qualquer campo de horário do app — usar este componente
 // em vez de TextInput puro sempre que pedir um horário.
-const HoraInput = forwardRef<TextInput, Props>(
+const HoraInput = forwardRef<TextInputRef, Props>(
   ({ value, onChangeText, placeholder, proximoCampoRef, style, editable = true }, ref) => {
+    const colors = useThemeColors();
+    const styles = useMemo(() => getStyles(colors), [colors]);
     function handleChangeText(raw: string) {
       const prevDigits = value.replace(/\D/g, '');
       const rawDigits = raw.replace(/\D/g, '').slice(0, 4);
@@ -55,14 +60,16 @@ const HoraInput = forwardRef<TextInput, Props>(
 
 export default HoraInput;
 
-const styles = StyleSheet.create({
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    color: colors.text,
-    backgroundColor: colors.brancoSuave,
-  },
-});
+function getStyles(colors: Colors) {
+  return StyleSheet.create({
+    input: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      color: colors.text,
+      backgroundColor: colors.brancoSuave,
+    },
+  });
+}

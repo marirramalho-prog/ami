@@ -20,6 +20,7 @@ Decisões de produto/técnicas já tomadas antes deste processo (resgatadas do r
 - **2026-11-10 — Confirmação de exclusão usa `Alert.alert` nativo + `window.confirm` na web** (`src/utils/confirm.ts`), em vez de só `Alert.alert`: `Alert.alert` é um no-op silencioso no `react-native-web` (confirmado lendo `node_modules/react-native-web/src/exports/Alert`), o que apagaria dados sem nenhum aviso na versão web.
 - **2026-11-11 — PR #1 mesclado na `ami`** (squash) com a aprovação da Mari, sem revisão manual prévia dela — ela pediu pra mesclar direto. A `ami` local tinha 3 commits próprios ainda não enviados ao GitHub; o merge do Git resolveu isso sozinho, sem conflito.
 - **2026-11-11 — Itens #6 e #9 do backlog implementados juntos**: adicionar `linking.config` ao `NavigationContainer` (resolve #6, navegação direta por URL na web) também fez o aviso de console do item #9 desaparecer — não precisou de mais nada além dessa mudança.
+- **2026-11-11 — Upgrade Expo SDK 57 → 58**: o Expo Go da App Store já tinha subido sozinho pra SDK 58 (não dá pra instalar versão antiga em iPhone), travando o teste no celular da Mari. Rodado `npx expo install --fix` + correção do `app.json` (splash movido pro plugin `expo-splash-screen`, `userInterfaceStyle` de `"light"` pra `"automatic"` — esse campo forçava o app inteiro no claro em iOS/Android, o que anularia o modo escuro recém-implementado) + ajuste de tipos de `ref` de `TextInput` (API mais estrita do React Native 0.87/0.88). `expo-doctor` e `tsc --noEmit` limpos depois.
 
 ## Decisões rejeitadas
 

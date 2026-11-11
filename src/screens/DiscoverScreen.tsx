@@ -1,12 +1,15 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, TextInput, Pressable, FlatList, StyleSheet } from 'react-native';
-import { colors } from '../theme/colors';
+import { Colors } from '../theme/colors';
+import { useThemeColors } from '../theme/useThemeColors';
 import { mockActivities, PILOT_CITY } from '../data/mockActivities';
 import { ActivityCategory } from '../types/activity';
 
 const CATEGORIAS: (ActivityCategory | 'Todas')[] = ['Todas', 'Extracurricular', 'Fim de semana'];
 
 export default function DiscoverScreen() {
+  const colors = useThemeColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
   const [busca, setBusca] = useState('');
   const [categoria, setCategoria] = useState<ActivityCategory | 'Todas'>('Todas');
 
@@ -85,7 +88,8 @@ export default function DiscoverScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: Colors) {
+  return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -138,4 +142,5 @@ const styles = StyleSheet.create({
   cardDetail: { fontSize: 13, color: colors.textMuted },
   cardDescription: { fontSize: 13, color: colors.text, marginTop: 4 },
   empty: { textAlign: 'center', color: colors.textMuted, marginTop: 24 },
-});
+  });
+}

@@ -9,9 +9,12 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { colors } from '../theme/colors';
+import { Colors } from '../theme/colors';
+import { useThemeColors } from '../theme/useThemeColors';
+import mascoteIcon from '../../assets/mascote/avatar-circular-bust.png';
 import { Child, childFullName } from '../types/child';
 import {
   DailyLog,
@@ -66,6 +69,8 @@ function emptySchedule(childId: string): SleepSchedule {
 }
 
 export default function SleepScreen() {
+  const colors = useThemeColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
   const navigation = useNavigation<any>();
   const today = todayKey();
 
@@ -83,7 +88,7 @@ export default function SleepScreen() {
   const [despertou, setDespertou] = useState('');
   const [adormeceu, setAdormeceu] = useState('');
   const [detalhesDespertar, setDetalhesDespertar] = useState('');
-  const adormeceuRef = useRef<TextInput>(null);
+  const adormeceuRef = useRef<React.ComponentRef<typeof TextInput>>(null);
 
   // Decide se abre a rotina resumida ou o formulário — olhando pra rotina
   // já salva desse filho, não pro estado ao vivo do formulário (senão ela
@@ -313,9 +318,11 @@ export default function SleepScreen() {
   if (children.length === 0) {
     return (
       <View style={[styles.container, styles.center]}>
+        <Image source={mascoteIcon} style={styles.mascoteEmpty} resizeMode="contain" />
         <Text style={styles.title}>Rotina do sono</Text>
         <Text style={styles.empty}>
-          Cadastre um perfil de filho(a) na aba Perfis para configurar a rotina de sono.
+          Cadastre um perfil de filho(a) na aba Perfis pra eu te ajudar a organizar a rotina de
+          sono.
         </Text>
         <Pressable
           onPress={() => navigation.navigate('Perfis')}
@@ -669,13 +676,15 @@ export default function SleepScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: Colors) {
+  return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   center: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20 },
   scrollContent: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 40 },
   title: { fontSize: 24, fontWeight: '700', color: colors.text },
   subtitle: { fontSize: 13, color: colors.textMuted, marginTop: 2, marginBottom: 12 },
   empty: { textAlign: 'center', color: colors.textMuted, marginTop: 12 },
+  mascoteEmpty: { width: 56, height: 56, marginBottom: 12 },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
   chip: {
     borderWidth: 1,
@@ -790,4 +799,5 @@ const styles = StyleSheet.create({
   navRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 20 },
   navSeta: { fontSize: 16, color: colors.text, paddingHorizontal: 8 },
   navLabel: { fontSize: 14, fontWeight: '700', color: colors.text, textTransform: 'capitalize' },
-});
+  });
+}

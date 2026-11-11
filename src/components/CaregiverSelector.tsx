@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { colors } from '../theme/colors';
+import { Colors } from '../theme/colors';
+import { useThemeColors } from '../theme/useThemeColors';
 import { Caregiver } from '../types/caregiver';
 
 interface Props {
@@ -16,6 +17,8 @@ export default function CaregiverSelector({
   onChange,
   label = 'Responsável (opcional)',
 }: Props) {
+  const colors = useThemeColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
   if (caregivers.length === 0) {
     return (
       <Text style={styles.empty}>
@@ -55,7 +58,8 @@ export default function CaregiverSelector({
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: Colors) {
+  return StyleSheet.create({
   label: { fontSize: 13, fontWeight: '600', color: colors.text },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
@@ -72,4 +76,5 @@ const styles = StyleSheet.create({
   chipText: { fontSize: 13, color: colors.textMuted },
   chipTextSelected: { color: colors.text, fontWeight: '600' },
   empty: { fontSize: 12, color: colors.textMuted },
-});
+  });
+}

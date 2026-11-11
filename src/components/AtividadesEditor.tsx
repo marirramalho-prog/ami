@@ -1,6 +1,7 @@
-import React, { useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
-import { colors } from '../theme/colors';
+import { Colors } from '../theme/colors';
+import { useThemeColors } from '../theme/useThemeColors';
 import { AtividadeExtracurricular, DIAS_SEMANA, DiaKey } from '../types/weeklyRoutine';
 import { ATIVIDADES_SUGERIDAS } from '../data/atividadesSugeridas';
 import DiasSemanaSelector from './DiasSemanaSelector';
@@ -12,11 +13,13 @@ interface Props {
 }
 
 export default function AtividadesEditor({ value, onChange }: Props) {
+  const colors = useThemeColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
   const [nomeDraft, setNomeDraft] = useState('');
   const [horarioInicio, setHorarioInicio] = useState('');
   const [horarioFim, setHorarioFim] = useState('');
   const [diasDraft, setDiasDraft] = useState<DiaKey[]>([]);
-  const horarioFimRef = useRef<TextInput>(null);
+  const horarioFimRef = useRef<React.ComponentRef<typeof TextInput>>(null);
 
   const sugestoes =
     nomeDraft.trim().length > 0
@@ -140,7 +143,8 @@ export function resumoDias(dias: AtividadeExtracurricular['diasSemana']): string
     .join(', ');
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: Colors) {
+  return StyleSheet.create({
   label: { fontSize: 13, fontWeight: '600', color: colors.text },
   atividadeBloco: { gap: 8 },
   atividadeHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
@@ -185,4 +189,5 @@ const styles = StyleSheet.create({
   },
   addButtonDisabled: { opacity: 0.5 },
   addButtonText: { color: colors.text, fontWeight: '600', fontSize: 13 },
-});
+  });
+}

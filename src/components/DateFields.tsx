@@ -1,6 +1,9 @@
-import React, { useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { View, TextInput, StyleSheet } from 'react-native';
-import { colors } from '../theme/colors';
+import { Colors } from '../theme/colors';
+import { useThemeColors } from '../theme/useThemeColors';
+
+type TextInputRef = React.ComponentRef<typeof TextInput>;
 
 interface Props {
   dia: string;
@@ -10,7 +13,7 @@ interface Props {
   onChangeMes: (v: string) => void;
   onChangeAno: (v: string) => void;
   // campo pra focar automaticamente depois que o ano for preenchido (opcional)
-  proximoCampoRef?: React.RefObject<TextInput | null>;
+  proximoCampoRef?: React.RefObject<TextInputRef | null>;
 }
 
 // Avança sozinho pro próximo campo assim que o atual é preenchido
@@ -24,8 +27,10 @@ export default function DateFields({
   onChangeAno,
   proximoCampoRef,
 }: Props) {
-  const mesRef = useRef<TextInput>(null);
-  const anoRef = useRef<TextInput>(null);
+  const colors = useThemeColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
+  const mesRef = useRef<TextInputRef>(null);
+  const anoRef = useRef<TextInputRef>(null);
 
   function handleDia(v: string) {
     const digits = v.replace(/\D/g, '').slice(0, 2);
@@ -80,18 +85,20 @@ export default function DateFields({
   );
 }
 
-const styles = StyleSheet.create({
-  row: { flexDirection: 'row', gap: 8 },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    color: colors.text,
-    backgroundColor: colors.brancoSuave,
-    textAlign: 'center',
-  },
-  small: { width: 60 },
-  large: { width: 90 },
-});
+function getStyles(colors: Colors) {
+  return StyleSheet.create({
+    row: { flexDirection: 'row', gap: 8 },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      color: colors.text,
+      backgroundColor: colors.brancoSuave,
+      textAlign: 'center',
+    },
+    small: { width: 60 },
+    large: { width: 90 },
+  });
+}

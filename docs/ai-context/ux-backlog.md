@@ -18,8 +18,24 @@
 | 12 | Estado vazio do Checklist é texto cinza solto, sem tom de marca nem CTA reforçado | `ChecklistScreen.tsx` | P3 | Baixo | Média | ✅ **Implementado em 2026-11-10** — copy com a mascote, convite à ação |
 | 13 | Sem indicador de progresso por checklist (ex: "1 de 2 itens feitos") | `ChecklistScreen.tsx` | P3 | Baixo-médio | Média | ✅ **Implementado em 2026-11-10** — "X de Y feitos" abaixo do tipo do checklist |
 
-**Ponto positivo observado** (não é backlog, é reforço do que já funciona bem): a mensagem "Data incompleta ou inválida." é reaproveitada de forma consistente entre `AgendaScreen`, `CaregiversScreen` e `ChildrenProfileScreen`, via componente `DateFields` compartilhado — exatamente o padrão que `design-system-b2c` deve proteger.
+**Ponto positivo observado** (não é backlog, é reforço do que já funciona bem): a mensagem "Data incompleta ou inválida." é reaproveitada de forma consistente entre `AgendaScreen`, `CaregiversScreen` e `ChildrenProfileScreen`, via componente `DateFields` compartilhado — exatamente o padrão que `design-system-b2c` deve proteger. Também: nenhuma tela usa texto branco sobre `primary`/`secondary` (sempre `colors.text` escuro por cima), o que já evita o erro de contraste mais comum em paletas pastel.
+
+## Auditoria ampliada (2026-11-11) — dimensões de direção de arte/produto premium
+
+Itens novos, fora do escopo da Fase 8 original (que focou em acessibilidade/navegação). Evidência: leitura de código (`grep` em `src/`) + teste visual no preview com `prefers-color-scheme: dark`.
+
+| # | Item | Onde | Criticidade | Esforço | Confiança | Status |
+|---|---|---|---|---|---|---|
+| 14 | Nenhum suporte a modo escuro — `prefers-color-scheme` ignorado, zero ocorrência de `useColorScheme`/`Appearance` no app; testado ao vivo no preview (claro e escuro renderizam idêntico) | `src/theme/colors.ts` (paleta única, sem variante dark) | P2 | Alto (depende do #16 primeiro) | Alta | Pendente |
+| 15 | Nenhuma animação/transição em lugar nenhum — zero uso de `Animated`, `react-native-reanimated` ou `LayoutAnimation` em `src/` | App inteiro | P2 | Médio | Alta | Pendente |
+| 16 | Tipografia, espaçamento e raio de borda não têm tokens — números soltos repetidos tela a tela (já descrito em `design-system.md`, elevado aqui a item de backlog formal porque bloqueia #14 e #15) | Todas as telas (`StyleSheet` local) | P1 | Alto | Alta | Pendente |
+| 17 | `textMuted` (`#7A7390`) fica abaixo do mínimo AA de contraste (4.5:1) pra texto normal: 4.48:1 sobre `card` branco, 4.10:1 sobre `background` padrão — usado em labels de apoio em várias telas | `src/theme/colors.ts` + todo uso de `colors.textMuted` | P1 | Baixo (escurecer o tom ~5-8%) | Alta | Pendente |
+| 18 | Nenhuma tipografia de destaque — título e corpo usam a fonte padrão do sistema em todas as telas, sem par tipográfico nem `expo-font`/`fontFamily` customizado | App inteiro | P3 | Médio | Alta | Pendente |
+| 19 | Chat da Âmi só tem bolhas de texto simples — sem componentes ricos (cards de indicação, botões de ação, mapa), sem estado de "pensando" animado | `AssistantScreen.tsx` | P2 (estratégico, não quick win) | Alto | Alta | Pendente |
+| 20 | Mascote aparece só no chat (avatar 32px) e no ícone da aba — ausente em onboarding (que também não existe como fluxo dedicado) e na maioria dos estados vazios/sucesso | `AssistantScreen.tsx`, `RootNavigator.tsx` | P3 | Médio | Média | Pendente |
+| 21 | Nenhuma tela de consentimento/privacidade (LGPD) — o app já coleta nome/nascimento/escola de crianças (Perfis) sem nenhum texto de transparência sobre uso/armazenamento do dado, mesmo sendo hoje só local | `ChildrenProfileScreen.tsx` | P2 (sobe pra P1 quando o Supabase/contas entrar) | Médio | Alta | Pendente |
+| 22 | Paywall e rótulo de conteúdo patrocinado inexistentes no código | — | — | — | — | Não é defeito: monetização ainda não foi implementada (confirmado em `product-brief.md`). Registrado aqui só pra não ser redescoberto como "bug" depois. |
 
 ## Como este arquivo vai crescer
 
-A Fase 8 (auditoria completa, skill `ux-audit-b2c`) vai classificar cada item encontrado por criticidade (P0-P3), esforço e confiança, com evidência. Nada aqui vira implementação sem sua aprovação explícita.
+A Fase 8 (auditoria completa, skill `ux-audit-b2c`) classificou os itens #1-13 por criticidade (P0-P3), esforço e confiança, com evidência — a maioria já implementada. A auditoria ampliada de 2026-11-11 acrescentou os itens #14-22, cobrindo dimensões de direção de arte que a Fase 8 não tocou (tokens de tipografia/espaçamento, modo escuro, motion, mascote, consentimento). Nada aqui vira implementação sem sua aprovação explícita.

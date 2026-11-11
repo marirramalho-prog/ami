@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { colors } from '../theme/colors';
+import { Colors } from '../theme/colors';
+import { useThemeColors } from '../theme/useThemeColors';
 
 // Placeholder até existir um conjunto de avatares ilustrados da marca.
 export const AVATAR_OPTIONS = ['🦄', '🌟', '🦋', '🐰', '🐻', '🌈', '🐱', '🦊'];
@@ -16,19 +17,15 @@ const AVATAR_NAMES: Record<string, string> = {
   '🦊': 'Raposa',
 };
 
-const BACKGROUNDS = [
-  colors.lilasSuave,
-  colors.azulClaro,
-  colors.lavandaClaro,
-  colors.azulGelo,
-];
-
 interface Props {
   value: string;
   onChange: (avatar: string) => void;
 }
 
 export default function AvatarPicker({ value, onChange }: Props) {
+  const colors = useThemeColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
+  const backgrounds = [colors.lilasSuave, colors.azulClaro, colors.lavandaClaro, colors.azulGelo];
   return (
     <View style={{ gap: 8 }}>
       <Text style={styles.label}>Avatar</Text>
@@ -41,7 +38,7 @@ export default function AvatarPicker({ value, onChange }: Props) {
               onPress={() => onChange(emoji)}
               style={[
                 styles.circle,
-                { backgroundColor: BACKGROUNDS[index % BACKGROUNDS.length] },
+                { backgroundColor: backgrounds[index % backgrounds.length] },
                 selected && styles.selected,
               ]}
               accessibilityRole="button"
@@ -57,7 +54,8 @@ export default function AvatarPicker({ value, onChange }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: Colors) {
+  return StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: '600',
@@ -83,4 +81,5 @@ const styles = StyleSheet.create({
   emoji: {
     fontSize: 20,
   },
-});
+  });
+}
