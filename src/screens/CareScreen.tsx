@@ -1,7 +1,8 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, Pressable, ScrollView, StyleSheet, Image } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { colors } from '../theme/colors';
+import mascoteIcon from '../../assets/mascote/avatar-circular-bust.png';
 import { Child, childFullName } from '../types/child';
 import { CareMilestone, CategoriaCuidado } from '../types/careMilestone';
 import { AGENDA_CUIDADOS } from '../data/agendaCuidados';
@@ -84,6 +85,7 @@ export default function CareScreen() {
   if (children.length === 0) {
     return (
       <View style={[styles.container, styles.center]}>
+        <Image source={mascoteIcon} style={styles.mascoteEmpty} resizeMode="contain" />
         <Text style={styles.title}>Agenda de cuidados</Text>
         <Text style={styles.empty}>
           Cadastre um perfil de filho(a) na aba Perfis pra ver o calendário de cuidados.
@@ -209,6 +211,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, fontWeight: '700', color: colors.text },
   subtitle: { fontSize: 13, color: colors.textMuted, marginTop: 4 },
   empty: { textAlign: 'center', color: colors.textMuted, marginTop: 12 },
+  mascoteEmpty: { width: 56, height: 56, marginBottom: 12 },
   link: { color: colors.text, fontWeight: '600', marginTop: 12 },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
   chip: {

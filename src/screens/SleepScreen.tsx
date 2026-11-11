@@ -9,9 +9,11 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { colors } from '../theme/colors';
+import mascoteIcon from '../../assets/mascote/avatar-circular-bust.png';
 import { Child, childFullName } from '../types/child';
 import {
   DailyLog,
@@ -313,9 +315,11 @@ export default function SleepScreen() {
   if (children.length === 0) {
     return (
       <View style={[styles.container, styles.center]}>
+        <Image source={mascoteIcon} style={styles.mascoteEmpty} resizeMode="contain" />
         <Text style={styles.title}>Rotina do sono</Text>
         <Text style={styles.empty}>
-          Cadastre um perfil de filho(a) na aba Perfis para configurar a rotina de sono.
+          Cadastre um perfil de filho(a) na aba Perfis pra eu te ajudar a organizar a rotina de
+          sono.
         </Text>
         <Pressable
           onPress={() => navigation.navigate('Perfis')}
@@ -676,6 +680,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, fontWeight: '700', color: colors.text },
   subtitle: { fontSize: 13, color: colors.textMuted, marginTop: 2, marginBottom: 12 },
   empty: { textAlign: 'center', color: colors.textMuted, marginTop: 12 },
+  mascoteEmpty: { width: 56, height: 56, marginBottom: 12 },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
   chip: {
     borderWidth: 1,
