@@ -3,6 +3,8 @@ import { View, TextInput, StyleSheet } from 'react-native';
 import { Colors } from '../theme/colors';
 import { useThemeColors } from '../theme/useThemeColors';
 
+type TextInputRef = React.ComponentRef<typeof TextInput>;
+
 interface Props {
   dia: string;
   mes: string;
@@ -11,7 +13,7 @@ interface Props {
   onChangeMes: (v: string) => void;
   onChangeAno: (v: string) => void;
   // campo pra focar automaticamente depois que o ano for preenchido (opcional)
-  proximoCampoRef?: React.RefObject<TextInput | null>;
+  proximoCampoRef?: React.RefObject<TextInputRef | null>;
 }
 
 // Avança sozinho pro próximo campo assim que o atual é preenchido
@@ -27,8 +29,8 @@ export default function DateFields({
 }: Props) {
   const colors = useThemeColors();
   const styles = useMemo(() => getStyles(colors), [colors]);
-  const mesRef = useRef<TextInput>(null);
-  const anoRef = useRef<TextInput>(null);
+  const mesRef = useRef<TextInputRef>(null);
+  const anoRef = useRef<TextInputRef>(null);
 
   function handleDia(v: string) {
     const digits = v.replace(/\D/g, '').slice(0, 2);

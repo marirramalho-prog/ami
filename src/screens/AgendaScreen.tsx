@@ -57,8 +57,8 @@ export default function AgendaScreen() {
   const [visualizacao, setVisualizacao] = useState<Visualizacao>('semana');
   const [dataReferencia, setDataReferencia] = useState(new Date());
   const [importVisible, setImportVisible] = useState(false);
-  const horaInicioRef = useRef<TextInput>(null);
-  const horaFimRef = useRef<TextInput>(null);
+  const horaInicioRef = useRef<React.ComponentRef<typeof TextInput>>(null);
+  const horaFimRef = useRef<React.ComponentRef<typeof TextInput>>(null);
 
   useFocusEffect(
     useCallback(() => {

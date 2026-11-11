@@ -6,12 +6,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#F5F4F8"
-    },
+    "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.amiapp.ami",
@@ -42,6 +37,17 @@
         {
           "photosPermission": "A Âmi usa suas fotos pra importar compromissos da agenda a partir de convites e documentos.",
           "cameraPermission": "A Âmi usa a câmera pra fotografar convites e documentos e importar compromissos da agenda."
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#F5F4F8",
+          "dark": {
+            "backgroundColor": "#1E1A2E"
+          }
         }
       ]
     ],

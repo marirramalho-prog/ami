@@ -88,7 +88,7 @@ export default function SleepScreen() {
   const [despertou, setDespertou] = useState('');
   const [adormeceu, setAdormeceu] = useState('');
   const [detalhesDespertar, setDetalhesDespertar] = useState('');
-  const adormeceuRef = useRef<TextInput>(null);
+  const adormeceuRef = useRef<React.ComponentRef<typeof TextInput>>(null);
 
   // Decide se abre a rotina resumida ou o formulário — olhando pra rotina
   // já salva desse filho, não pro estado ao vivo do formulário (senão ela

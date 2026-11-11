@@ -37,5 +37,5 @@ const dark = {
   textMuted: '#A79FBF',
 } as const;
 
-export type Colors = typeof light;
+export type Colors = { [K in keyof typeof light]: string };
 export const palettes = { light, dark } as const;

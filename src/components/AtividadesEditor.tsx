@@ -19,7 +19,7 @@ export default function AtividadesEditor({ value, onChange }: Props) {
   const [horarioInicio, setHorarioInicio] = useState('');
   const [horarioFim, setHorarioFim] = useState('');
   const [diasDraft, setDiasDraft] = useState<DiaKey[]>([]);
-  const horarioFimRef = useRef<TextInput>(null);
+  const horarioFimRef = useRef<React.ComponentRef<typeof TextInput>>(null);
 
   const sugestoes =
     nomeDraft.trim().length > 0
