@@ -62,6 +62,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 6,
+    minHeight: 44,
+    justifyContent: 'center',
     backgroundColor: colors.brancoSuave,
   },
   chipSelected: { backgroundColor: colors.secondary, borderColor: colors.secondary },

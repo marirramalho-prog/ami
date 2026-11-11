@@ -13,6 +13,7 @@ import { useFocusEffect, useRoute } from '@react-navigation/native';
 import { colors } from '../theme/colors';
 import { ChecklistTemplate } from '../types/routine';
 import { loadChecklists, saveChecklists } from '../storage/routineStorage';
+import { confirmAction } from '../utils/confirm';
 import { loadChildren } from '../storage/childrenStorage';
 import { syncChecklistsForAllChildren } from '../utils/checklistSync';
 
@@ -25,14 +26,23 @@ export default function ChecklistScreen() {
   const [nome, setNome] = useState(route.params?.nomeSugerido || '');
   const [tipo, setTipo] = useState(route.params?.tipoSugerido || '');
   const [novoItem, setNovoItem] = useState<Record<string, string>>({});
+  // Aberto por padrão: sem checklist nenhum ainda, ou chegando com um
+  // nome/tipo sugerido (vindo de Agenda/Import). Fechado nos outros casos,
+  // pra não obrigar rolagem toda vez que já existem checklists criados.
+  const [formExpanded, setFormExpanded] = useState(true);
 
   useFocusEffect(
     useCallback(() => {
       loadChildren()
         .then((children) => syncChecklistsForAllChildren(children))
         .then(loadChecklists)
-        .then(setTemplates);
-    }, []),
+        .then((list) => {
+          setTemplates(list);
+          if (!route.params?.nomeSugerido) {
+            setFormExpanded(list.length === 0);
+          }
+        });
+    }, [route.params?.nomeSugerido]),
   );
 
   async function persist(updated: ChecklistTemplate[]) {
@@ -51,10 +61,18 @@ export default function ChecklistScreen() {
     await persist([...templates, template]);
     setNome('');
     setTipo('');
+    setFormExpanded(false);
   }
 
-  async function handleRemoveTemplate(id: string) {
-    await persist(templates.filter((t) => t.id !== id));
+  function handleRemoveTemplate(id: string) {
+    const template = templates.find((t) => t.id === id);
+    confirmAction(
+      'Remover checklist?',
+      `"${template?.nome || 'este checklist'}" e todos os itens dele serão removidos. Essa ação não pode ser desfeita.`,
+      async () => {
+        await persist(templates.filter((t) => t.id !== id));
+      },
+    );
   }
 
   async function handleAddItem(templateId: string) {
@@ -96,6 +114,17 @@ export default function ChecklistScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         <Text style={styles.title}>Checklists de rotina</Text>
 
+        {!formExpanded && (
+          <Pressable
+            style={styles.novoChecklistButton}
+            onPress={() => setFormExpanded(true)}
+            accessibilityRole="button"
+          >
+            <Text style={styles.novoChecklistButtonText}>+ Novo checklist</Text>
+          </Pressable>
+        )}
+
+        {formExpanded && (
         <View style={styles.form}>
           <TextInput
             style={styles.input}
@@ -137,13 +166,25 @@ export default function ChecklistScreen() {
           >
             <Text style={styles.buttonText}>Criar checklist</Text>
           </Pressable>
+          {templates.length > 0 && (
+            <Pressable onPress={() => setFormExpanded(false)}>
+              <Text style={styles.cancelarLink}>cancelar</Text>
+            </Pressable>
+          )}
         </View>
+        )}
 
         <View style={styles.list}>
           {templates.length === 0 && (
-            <Text style={styles.empty}>Nenhum checklist criado ainda.</Text>
+            <Text style={styles.empty}>
+              🧚 Nenhum checklist por aqui ainda — cria um ali em cima pra te ajudar a não
+              esquecer nada na próxima rotina, passeio ou viagem.
+            </Text>
           )}
-          {templates.map((template) => (
+          {templates.map((template) => {
+            const totalItens = template.itens.length;
+            const feitos = template.itens.filter((i) => i.feito).length;
+            return (
             <View
               key={template.id}
               style={[styles.card, template.id === highlightId && styles.cardDestacado]}
@@ -161,6 +202,11 @@ export default function ChecklistScreen() {
                       </View>
                     )}
                   </View>
+                  {totalItens > 0 && (
+                    <Text style={styles.cardProgress}>
+                      {feitos} de {totalItens} feitos
+                    </Text>
+                  )}
                 </View>
                 <Pressable onPress={() => handleRemoveTemplate(template.id)}>
                   <Text style={styles.remove}>remover</Text>
@@ -179,7 +225,12 @@ export default function ChecklistScreen() {
                   <Text style={[styles.itemText, item.feito && styles.itemTextDone]}>
                     {item.texto}
                   </Text>
-                  <Pressable onPress={() => handleRemoveItem(template.id, item.id)}>
+                  <Pressable
+                    style={styles.itemRemoveButton}
+                    onPress={() => handleRemoveItem(template.id, item.id)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Remover item "${item.texto}"`}
+                  >
                     <Text style={styles.itemRemove}>×</Text>
                   </Pressable>
                 </Pressable>
@@ -200,12 +251,15 @@ export default function ChecklistScreen() {
                 <Pressable
                   style={styles.addItemButton}
                   onPress={() => handleAddItem(template.id)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Adicionar item ao checklist"
                 >
                   <Text style={styles.addItemButtonText}>+</Text>
                 </Pressable>
               </View>
             </View>
-          ))}
+            );
+          })}
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -216,6 +270,21 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   scrollContent: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 40 },
   title: { fontSize: 24, fontWeight: '700', color: colors.text, marginBottom: 16 },
+  novoChecklistButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  novoChecklistButtonText: { color: colors.text, fontWeight: '700', fontSize: 15 },
+  cancelarLink: {
+    color: colors.textMuted,
+    textAlign: 'center',
+    fontSize: 13,
+    minHeight: 44,
+    textAlignVertical: 'center',
+  },
   form: {
     backgroundColor: colors.card,
     borderRadius: 16,
@@ -241,6 +310,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 6,
+    minHeight: 44,
+    justifyContent: 'center',
     backgroundColor: colors.brancoSuave,
   },
   tipoChipSelected: { backgroundColor: colors.secondary, borderColor: colors.secondary },
@@ -269,6 +340,7 @@ const styles = StyleSheet.create({
   cardName: { fontSize: 16, fontWeight: '600', color: colors.text },
   cardTypeRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
   cardType: { fontSize: 12, color: colors.textMuted },
+  cardProgress: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
   autoTag: {
     backgroundColor: colors.lavandaClaro,
     borderRadius: 10,
@@ -292,7 +364,13 @@ const styles = StyleSheet.create({
   checkmark: { fontSize: 12, color: colors.text, fontWeight: '700' },
   itemText: { flex: 1, fontSize: 14, color: colors.text },
   itemTextDone: { textDecorationLine: 'line-through', color: colors.textMuted },
-  itemRemove: { fontSize: 16, color: colors.textMuted, paddingHorizontal: 4 },
+  itemRemoveButton: {
+    minHeight: 44,
+    minWidth: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  itemRemove: { fontSize: 16, color: colors.textMuted },
   addItemRow: { flexDirection: 'row', gap: 8, marginTop: 4 },
   addItemButton: {
     width: 42,
@@ -302,5 +380,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   addItemButtonText: { fontSize: 18, fontWeight: '700', color: colors.text },
-  empty: { textAlign: 'center', color: colors.textMuted, marginTop: 8 },
+  empty: { textAlign: 'center', color: colors.textMuted, marginTop: 8, lineHeight: 20 },
 });

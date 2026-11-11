@@ -14,6 +14,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { colors } from '../theme/colors';
 import { Child, childFullName } from '../types/child';
+import { Caregiver } from '../types/caregiver';
 import { AgendaEvent } from '../types/routine';
 import {
   Arco,
@@ -28,6 +29,7 @@ import {
   TipoFinal,
 } from '../types/story';
 import { loadChildren } from '../storage/childrenStorage';
+import { loadCaregivers } from '../storage/caregiverStorage';
 import { loadEvents } from '../storage/routineStorage';
 import {
   loadCharacters,
@@ -47,6 +49,7 @@ interface PersonagemSelecionado {
 const emptyPrefs: StoryPreferences = {
   personagens: [],
   arco: '',
+  vilao: '',
   papelCrianca: '',
   relacao: '',
   tema: '',
@@ -64,6 +67,7 @@ const emptyPrefs: StoryPreferences = {
 
 export default function StoriesScreen() {
   const [children, setChildren] = useState<Child[]>([]);
+  const [caregivers, setCaregivers] = useState<Caregiver[]>([]);
   const [customCharacters, setCustomCharacters] = useState<CustomCharacter[]>([]);
   const [events, setEvents] = useState<AgendaEvent[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
@@ -79,6 +83,7 @@ export default function StoriesScreen() {
   useFocusEffect(
     useCallback(() => {
       loadChildren().then(setChildren);
+      loadCaregivers().then(setCaregivers);
       loadCharacters().then(setCustomCharacters);
       loadEvents().then(setEvents);
       loadStories().then(setStories);
@@ -137,6 +142,18 @@ export default function StoriesScreen() {
       setStories(updated);
       await saveStories(updated);
       setHistoriaGerada(story);
+
+      // Sem "criar como série" marcado, não carrega os personagens/preferências
+      // pra próxima história — cada uma começa do zero, sem vincular por engano
+      // quem foi escolhido da última vez (ex: um irmão que não devia entrar
+      // nesta história nova). Com série marcada, mantém a base (é o propósito
+      // da opção), só limpa o vínculo de evento, que é específico de cada história.
+      if (!preferenciasFinal.serie) {
+        setSelecionados([]);
+        setPrefs(emptyPrefs);
+      } else {
+        updatePrefs('eventoVinculadoId', null);
+      }
     } catch (e) {
       setErro(
         e instanceof Error
@@ -177,6 +194,26 @@ export default function StoriesScreen() {
                 </Pressable>
               );
             })}
+            {caregivers.map((caregiver) => {
+              const selected = selecionados.some((s) => s.id === caregiver.id);
+              return (
+                <Pressable
+                  key={caregiver.id}
+                  style={[styles.chip, selected && styles.chipSelected]}
+                  onPress={() =>
+                    togglePersonagem({
+                      id: caregiver.id,
+                      nome: caregiver.nomeCompleto,
+                      isChild: false,
+                    })
+                  }
+                >
+                  <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
+                    {caregiver.nomeCompleto}
+                  </Text>
+                </Pressable>
+              );
+            })}
             {customCharacters.map((character) => {
               const selected = selecionados.some((s) => s.id === character.id);
               return (
@@ -198,6 +235,10 @@ export default function StoriesScreen() {
               );
             })}
           </View>
+          <Text style={styles.helperSmall}>
+            Os personagens acima vêm de perfis já cadastrados (filhos e cuidadores) — um texto
+            novo no campo abaixo cria um personagem separado, sem vínculo com ninguém cadastrado.
+          </Text>
           <View style={styles.row}>
             <TextInput
               style={[styles.input, { flex: 1 }]}
@@ -207,7 +248,12 @@ export default function StoriesScreen() {
               onChangeText={setNovoPersonagem}
               onSubmitEditing={handleAddCustomCharacter}
             />
-            <Pressable style={styles.addButton} onPress={handleAddCustomCharacter}>
+            <Pressable
+              style={styles.addButton}
+              onPress={handleAddCustomCharacter}
+              accessibilityRole="button"
+              accessibilityLabel="Adicionar novo personagem"
+            >
               <Text style={styles.addButtonText}>+</Text>
             </Pressable>
           </View>
@@ -219,6 +265,17 @@ export default function StoriesScreen() {
             onChange={(v) => updatePrefs('arco', v as Arco)}
             allowCustom
           />
+
+          <View style={{ gap: 6 }}>
+            <Text style={styles.label}>Vilão (opcional)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Nome do vilão, se a história tiver um"
+              placeholderTextColor={colors.textMuted}
+              value={prefs.vilao}
+              onChangeText={(v) => updatePrefs('vilao', v)}
+            />
+          </View>
 
           <ChipSelector
             label="Papel da criança na história"
@@ -327,16 +384,25 @@ export default function StoriesScreen() {
           <Text style={styles.sectionTitle}>Série e contexto</Text>
 
           <View style={styles.switchRow}>
-            <Text style={styles.label}>Criar como série (mesmos personagens/cenário)</Text>
+            <Text style={[styles.label, styles.switchLabel]}>
+              Criar como série (mesmos personagens/cenário)
+            </Text>
             <Switch
               value={prefs.serie}
               onValueChange={(v) => updatePrefs('serie', v)}
+              accessibilityLabel="Criar como série, com os mesmos personagens e cenário"
             />
           </View>
 
           {events.length > 0 && (
             <View style={{ gap: 8 }}>
-              <Text style={styles.label}>Vincular a uma atividade recente (opcional)</Text>
+              <Text style={styles.label}>
+                Inspirar a história em um compromisso real da agenda (opcional)
+              </Text>
+              <Text style={styles.helperSmall}>
+                Escolha um evento pra Âmi usar como pano de fundo — por exemplo, contar a história
+                no cenário de um passeio ou comemoração já marcados.
+              </Text>
               <View style={styles.row}>
                 <Pressable
                   style={[
@@ -435,6 +501,7 @@ const styles = StyleSheet.create({
   divider: { height: 1, backgroundColor: colors.border, marginVertical: 6 },
   label: { fontSize: 13, fontWeight: '600', color: colors.text },
   helper: { fontSize: 12, color: colors.textMuted, marginTop: -4 },
+  helperSmall: { fontSize: 12, color: colors.textMuted },
   warning: { fontSize: 12, color: '#B5555A' },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
@@ -443,6 +510,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 6,
+    minHeight: 44,
+    justifyContent: 'center',
     backgroundColor: colors.brancoSuave,
   },
   chipSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
@@ -465,7 +534,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   addButtonText: { fontSize: 18, fontWeight: '700', color: colors.text },
-  switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  switchLabel: { flex: 1 },
   button: {
     backgroundColor: colors.primary,
     borderRadius: 10,

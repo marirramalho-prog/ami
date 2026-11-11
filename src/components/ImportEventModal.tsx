@@ -137,7 +137,7 @@ export default function ImportEventModal({ visible, onClose, children, onAddEven
   const selecionados = itens.filter((it) => it.selecionado);
   const podeConfirmar =
     selecionados.length > 0 &&
-    selecionados.every((it) => it.evento.titulo.trim() && isValidDatePart(it.evento.data));
+    selecionados.every((it) => it.evento.titulo.trim() && isValidDatePart(it.evento.data, true));
 
   async function handleConfirmar() {
     if (!podeConfirmar || salvando) return;
@@ -322,7 +322,7 @@ export default function ImportEventModal({ visible, onClose, children, onAddEven
                     }
                   />
                 </View>
-                {!isValidDatePart(item.evento.data) && (
+                {!isValidDatePart(item.evento.data, true) && (
                   <Text style={styles.warning}>Data incompleta ou inválida.</Text>
                 )}
 

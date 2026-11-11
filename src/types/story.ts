@@ -17,6 +17,7 @@ export interface CustomCharacter {
 export interface StoryPreferences {
   personagens: string[]; // nomes (podem vir de Child cadastrado ou CustomCharacter)
   arco: Arco;
+  vilao: string; // nome do vilão, texto livre (opcional)
   papelCrianca: PapelCrianca;
   relacao: string;
   tema: Tema;
