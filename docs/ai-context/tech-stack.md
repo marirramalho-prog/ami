@@ -2,14 +2,14 @@
 
 ## Frontend
 
-- **Expo** `^57.0.20` (atualização disponível: `~57.0.32` — não aplicada ainda) + **React Native** `0.86.3` + **React** `19.2.3`, TypeScript `~6.0.3`.
+- **Expo** `^58.0.24` + **React Native** `0.88.1` + **React** `19.3.0`, TypeScript `~6.0.3`. Atualizado de SDK 57 pra 58 em 2026-11-11 pra o Expo Go do iPhone da Mari (que já tinha subido sozinho pra SDK 58) voltar a abrir o projeto.
 - Navegação: `@react-navigation/native` + `@react-navigation/bottom-tabs` (v7) — uma única barra de abas, sem stacks aninhadas.
 - Roda em **iOS, Android e Web** (`react-native-web`) a partir do mesmo código.
 - Armazenamento: `@react-native-async-storage/async-storage` — **tudo local no aparelho**, sem backend hoje.
 - Notificações: `expo-notifications` (push local — não funcionam na visualização web, só no app instalado).
 - Mídia: `expo-image-picker`, `expo-document-picker`, `expo-image-manipulator` (fotos/PDF de convites e boletins).
 
-⚠️ **O `AGENTS.md` do projeto avisa que o Expo mudou de versão** — sempre checar a documentação v57 (`https://docs.expo.dev/versions/v57.0.0/`) antes de escrever código, inclusive para mudanças de UI.
+⚠️ **O `AGENTS.md` do projeto avisa que o Expo mudou de versão** — sempre checar a documentação v58 (`https://docs.expo.dev/versions/v58.0.0/`) antes de escrever código, inclusive para mudanças de UI.
 
 ## Backend / IA
 
