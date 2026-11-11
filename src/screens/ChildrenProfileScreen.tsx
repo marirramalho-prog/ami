@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,8 @@ import {
   Platform,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { colors } from '../theme/colors';
+import { Colors } from '../theme/colors';
+import { useThemeColors } from '../theme/useThemeColors';
 import { Child, childFullName, Turno } from '../types/child';
 import { AtividadeExtracurricular } from '../types/weeklyRoutine';
 import { loadChildren, saveChildren } from '../storage/childrenStorage';
@@ -45,6 +46,8 @@ const emptyForm = {
 };
 
 export default function ChildrenProfileScreen() {
+  const colors = useThemeColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
   const [children, setChildren] = useState<Child[]>([]);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -308,7 +311,8 @@ export default function ChildrenProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: Colors) {
+  return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -485,4 +489,5 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     marginTop: 24,
   },
-});
+  });
+}

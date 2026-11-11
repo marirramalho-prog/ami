@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { colors } from '../theme/colors';
+import { Colors } from '../theme/colors';
+import { useThemeColors } from '../theme/useThemeColors';
 import { DIAS_SEMANA, DiaKey } from '../types/weeklyRoutine';
 
 interface Props {
@@ -9,6 +10,8 @@ interface Props {
 }
 
 export default function DiasSemanaSelector({ value, onChange }: Props) {
+  const colors = useThemeColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
   function alternar(dia: DiaKey) {
     if (value.includes(dia)) {
       onChange(value.filter((d) => d !== dia));
@@ -43,7 +46,8 @@ export default function DiasSemanaSelector({ value, onChange }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: Colors) {
+  return StyleSheet.create({
   label: { fontSize: 13, fontWeight: '600', color: colors.text },
   row: { flexDirection: 'row', gap: 6 },
   diaBotao: {
@@ -58,4 +62,5 @@ const styles = StyleSheet.create({
   diaBotaoAtivo: { backgroundColor: colors.primary, borderColor: colors.primary },
   diaBotaoTexto: { fontSize: 13, color: colors.textMuted },
   diaBotaoTextoAtivo: { color: colors.text, fontWeight: '600' },
-});
+  });
+}

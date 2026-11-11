@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,8 @@ import {
   Platform,
 } from 'react-native';
 import { useFocusEffect, useRoute } from '@react-navigation/native';
-import { colors } from '../theme/colors';
+import { Colors } from '../theme/colors';
+import { useThemeColors } from '../theme/useThemeColors';
 import { ChecklistTemplate } from '../types/routine';
 import { loadChecklists, saveChecklists } from '../storage/routineStorage';
 import { confirmAction } from '../utils/confirm';
@@ -20,6 +21,8 @@ import { syncChecklistsForAllChildren } from '../utils/checklistSync';
 const TIPOS_SUGERIDOS = ['Rotina escolar', 'Passeio', 'Viagem', 'Fim de semana'];
 
 export default function ChecklistScreen() {
+  const colors = useThemeColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
   const route = useRoute<any>();
   const highlightId: string | undefined = route.params?.highlightId;
   const [templates, setTemplates] = useState<ChecklistTemplate[]>([]);
@@ -266,7 +269,8 @@ export default function ChecklistScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: Colors) {
+  return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   scrollContent: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 40 },
   title: { fontSize: 24, fontWeight: '700', color: colors.text, marginBottom: 16 },
@@ -381,4 +385,5 @@ const styles = StyleSheet.create({
   },
   addItemButtonText: { fontSize: 18, fontWeight: '700', color: colors.text },
   empty: { textAlign: 'center', color: colors.textMuted, marginTop: 8, lineHeight: 20 },
-});
+  });
+}

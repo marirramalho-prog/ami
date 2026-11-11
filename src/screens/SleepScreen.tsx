@@ -12,7 +12,8 @@ import {
   Image,
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { colors } from '../theme/colors';
+import { Colors } from '../theme/colors';
+import { useThemeColors } from '../theme/useThemeColors';
 import mascoteIcon from '../../assets/mascote/avatar-circular-bust.png';
 import { Child, childFullName } from '../types/child';
 import {
@@ -68,6 +69,8 @@ function emptySchedule(childId: string): SleepSchedule {
 }
 
 export default function SleepScreen() {
+  const colors = useThemeColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
   const navigation = useNavigation<any>();
   const today = todayKey();
 
@@ -673,7 +676,8 @@ export default function SleepScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: Colors) {
+  return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   center: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20 },
   scrollContent: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 40 },
@@ -795,4 +799,5 @@ const styles = StyleSheet.create({
   navRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 20 },
   navSeta: { fontSize: 16, color: colors.text, paddingHorizontal: 8 },
   navLabel: { fontSize: 14, fontWeight: '700', color: colors.text, textTransform: 'capitalize' },
-});
+  });
+}

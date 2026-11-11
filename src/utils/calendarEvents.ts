@@ -1,14 +1,17 @@
-import { colors } from '../theme/colors';
+import { Colors } from '../theme/colors';
 import { Child, childFullName } from '../types/child';
 import { Caregiver } from '../types/caregiver';
 import { AgendaEvent, ChecklistTemplate } from '../types/routine';
 import { DIAS_SEMANA } from '../types/weeklyRoutine';
 
-export const TIPO_COR: Record<string, string> = {
-  escola: colors.azulClaro,
-  atividade: colors.lilasSuave,
-  evento: colors.lavandaClaro,
-};
+// Função em vez de objeto fixo pra respeitar o tema atual (claro/escuro) — ux-backlog.md #14
+export function tipoCor(colors: Colors): Record<string, string> {
+  return {
+    escola: colors.azulClaro,
+    atividade: colors.lilasSuave,
+    evento: colors.lavandaClaro,
+  };
+}
 
 export interface CalendarItem {
   id: string;

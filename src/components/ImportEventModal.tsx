@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Modal,
   View,
@@ -10,7 +10,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { colors } from '../theme/colors';
+import { Colors } from '../theme/colors';
+import { useThemeColors } from '../theme/useThemeColors';
 import { Child, childFullName } from '../types/child';
 import { AgendaEvent } from '../types/routine';
 import { ExtractedEvent, CampoExtraido } from '../types/eventImport';
@@ -65,6 +66,8 @@ function ehAniversario(evento: ExtractedEvent): boolean {
 }
 
 export default function ImportEventModal({ visible, onClose, children, onAddEvents }: Props) {
+  const colors = useThemeColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
   const navigation = useNavigation<any>();
   const [passo, setPasso] = useState<Passo>('escolha');
   const [erro, setErro] = useState('');
@@ -456,7 +459,8 @@ export default function ImportEventModal({ visible, onClose, children, onAddEven
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: Colors) {
+  return StyleSheet.create({
   container: {
     paddingHorizontal: 20,
     paddingTop: 60,
@@ -531,4 +535,5 @@ const styles = StyleSheet.create({
   },
   confirmarBtnDesabilitado: { opacity: 0.5 },
   confirmarTexto: { color: colors.text, fontWeight: '700', fontSize: 15 },
-});
+  });
+}

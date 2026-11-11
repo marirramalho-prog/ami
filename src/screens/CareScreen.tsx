@@ -1,7 +1,8 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, Pressable, ScrollView, StyleSheet, Image } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { colors } from '../theme/colors';
+import { Colors } from '../theme/colors';
+import { useThemeColors } from '../theme/useThemeColors';
 import mascoteIcon from '../../assets/mascote/avatar-circular-bust.png';
 import { Child, childFullName } from '../types/child';
 import { CareMilestone, CategoriaCuidado } from '../types/careMilestone';
@@ -54,6 +55,8 @@ interface MarcoCalculado {
 }
 
 export default function CareScreen() {
+  const colors = useThemeColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
   const navigation = useNavigation<any>();
   const [children, setChildren] = useState<Child[]>([]);
   const [childId, setChildId] = useState<string | null>(null);
@@ -198,7 +201,8 @@ export default function CareScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: Colors) {
+  return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   center: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20 },
   header: {
@@ -274,4 +278,5 @@ const styles = StyleSheet.create({
   seloTexto: { fontSize: 11, color: colors.textMuted, fontWeight: '600' },
   divider: { height: 0.5, backgroundColor: colors.azulGelo },
   fonte: { fontSize: 11, color: colors.textMuted },
-});
+  });
+}

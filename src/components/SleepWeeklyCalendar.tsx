@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { colors } from '../theme/colors';
+import { Colors } from '../theme/colors';
+import { useThemeColors } from '../theme/useThemeColors';
 import { DailyLog, SleepSchedule } from '../types/sleep';
 import { addDays, isSameDay } from '../utils/calendarDates';
 import { dateKey } from '../utils/date';
@@ -12,8 +13,6 @@ interface Props {
 }
 
 const DIAS_HEADER = ['DOM.', 'SEG.', 'TER.', 'QUA.', 'QUI.', 'SEX.', 'SÁB.'];
-const COR_SONECA = colors.azulClaro;
-const COR_NOITE = colors.lilasSuave;
 
 interface ResumoDia {
   soneca: boolean;
@@ -27,6 +26,10 @@ function resumoDoDia(date: Date, schedule: SleepSchedule | null, logs: DailyLog[
 }
 
 export default function SleepWeeklyCalendar({ inicioSemana, schedule, logs }: Props) {
+  const colors = useThemeColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
+  const COR_SONECA = colors.azulClaro;
+  const COR_NOITE = colors.lilasSuave;
   const dias = Array.from({ length: 7 }, (_, i) => addDays(inicioSemana, i));
   const hoje = new Date();
   const [selecionado, setSelecionado] = useState<Date>(hoje);
@@ -136,7 +139,8 @@ export default function SleepWeeklyCalendar({ inicioSemana, schedule, logs }: Pr
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: Colors) {
+  return StyleSheet.create({
   grid: { flexDirection: 'row' },
   celula: {
     flex: 1,
@@ -176,4 +180,5 @@ const styles = StyleSheet.create({
   item: { borderLeftWidth: 3, paddingLeft: 8, paddingVertical: 2 },
   itemTitulo: { fontSize: 13, color: colors.text, fontWeight: '600' },
   itemSubtitulo: { fontSize: 12, color: colors.textMuted },
-});
+  });
+}

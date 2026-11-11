@@ -2,7 +2,7 @@ import React from 'react';
 import { Text, Image } from 'react-native';
 import { NavigationContainer, LinkingOptions } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { colors } from '../theme/colors';
+import { useThemeColors } from '../theme/useThemeColors';
 import mascoteIcon from '../../assets/mascote/avatar-circular-bust.png';
 import ChildrenProfileScreen from '../screens/ChildrenProfileScreen';
 import CaregiversScreen from '../screens/CaregiversScreen';
@@ -59,6 +59,7 @@ const linking: LinkingOptions<any> = {
 };
 
 export default function RootNavigator() {
+  const colors = useThemeColors();
   return (
     <NavigationContainer linking={linking}>
       <Tab.Navigator

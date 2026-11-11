@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { colors } from '../theme/colors';
+import { Colors } from '../theme/colors';
+import { useThemeColors } from '../theme/useThemeColors';
 import { Turno } from '../types/child';
 
 const OPTIONS: { value: Turno; label: string }[] = [
@@ -15,6 +16,8 @@ interface Props {
 }
 
 export default function TurnoSelector({ value, onChange }: Props) {
+  const colors = useThemeColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
   return (
     <View style={{ gap: 8 }}>
       <Text style={styles.label}>Turno escolar</Text>
@@ -38,7 +41,8 @@ export default function TurnoSelector({ value, onChange }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: Colors) {
+  return StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: '600',
@@ -69,4 +73,5 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontWeight: '600',
   },
-});
+  });
+}

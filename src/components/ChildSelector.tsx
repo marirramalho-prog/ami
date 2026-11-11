@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { colors } from '../theme/colors';
+import { Colors } from '../theme/colors';
+import { useThemeColors } from '../theme/useThemeColors';
 import { Child, childFullName } from '../types/child';
 
 interface Props {
@@ -10,6 +11,8 @@ interface Props {
 }
 
 export default function ChildSelector({ children, value, onChange }: Props) {
+  const colors = useThemeColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
   if (children.length === 0) {
     return (
       <Text style={styles.empty}>
@@ -45,7 +48,8 @@ export default function ChildSelector({ children, value, onChange }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: Colors) {
+  return StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: '600',
@@ -82,4 +86,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textMuted,
   },
-});
+  });
+}

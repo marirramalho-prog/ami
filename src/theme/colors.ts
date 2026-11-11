@@ -39,6 +39,3 @@ const dark = {
 
 export type Colors = typeof light;
 export const palettes = { light, dark } as const;
-
-/** @deprecated use `useThemeColors()` — este export fica fixo no claro, só pra telas ainda não migradas */
-export const colors = light;

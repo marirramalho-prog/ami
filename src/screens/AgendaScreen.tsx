@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,8 @@ import {
   Platform,
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { colors } from '../theme/colors';
+import { Colors } from '../theme/colors';
+import { useThemeColors } from '../theme/useThemeColors';
 import { Child } from '../types/child';
 import { Caregiver } from '../types/caregiver';
 import { AgendaEvent, ChecklistTemplate } from '../types/routine';
@@ -45,6 +46,8 @@ const emptyForm = {
 };
 
 export default function AgendaScreen() {
+  const colors = useThemeColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
   const navigation = useNavigation<any>();
   const [children, setChildren] = useState<Child[]>([]);
   const [caregivers, setCaregivers] = useState<Caregiver[]>([]);
@@ -341,7 +344,8 @@ export default function AgendaScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: Colors) {
+  return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   scrollContent: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 40 },
   title: { fontSize: 24, fontWeight: '700', color: colors.text, marginBottom: 16 },
@@ -434,4 +438,5 @@ const styles = StyleSheet.create({
   cardDetail: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
   remove: { color: colors.textMuted, fontSize: 12 },
   empty: { textAlign: 'center', color: colors.textMuted, marginTop: 24 },
-});
+  });
+}

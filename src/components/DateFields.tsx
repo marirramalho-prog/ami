@@ -1,6 +1,7 @@
-import React, { useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { View, TextInput, StyleSheet } from 'react-native';
-import { colors } from '../theme/colors';
+import { Colors } from '../theme/colors';
+import { useThemeColors } from '../theme/useThemeColors';
 
 interface Props {
   dia: string;
@@ -24,6 +25,8 @@ export default function DateFields({
   onChangeAno,
   proximoCampoRef,
 }: Props) {
+  const colors = useThemeColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
   const mesRef = useRef<TextInput>(null);
   const anoRef = useRef<TextInput>(null);
 
@@ -80,18 +83,20 @@ export default function DateFields({
   );
 }
 
-const styles = StyleSheet.create({
-  row: { flexDirection: 'row', gap: 8 },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    color: colors.text,
-    backgroundColor: colors.brancoSuave,
-    textAlign: 'center',
-  },
-  small: { width: 60 },
-  large: { width: 90 },
-});
+function getStyles(colors: Colors) {
+  return StyleSheet.create({
+    row: { flexDirection: 'row', gap: 8 },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      color: colors.text,
+      backgroundColor: colors.brancoSuave,
+      textAlign: 'center',
+    },
+    small: { width: 60 },
+    large: { width: 90 },
+  });
+}

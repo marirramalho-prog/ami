@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
-import { colors } from '../theme/colors';
+import { Colors } from '../theme/colors';
+import { useThemeColors } from '../theme/useThemeColors';
 
 interface Props {
   label: string;
@@ -10,6 +11,8 @@ interface Props {
 }
 
 export default function TagInput({ label, placeholder, values, onChange }: Props) {
+  const colors = useThemeColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
   const [draft, setDraft] = useState('');
 
   function handleAdd() {
@@ -67,7 +70,8 @@ export default function TagInput({ label, placeholder, values, onChange }: Props
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: Colors) {
+  return StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: '600',
@@ -116,4 +120,5 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 13,
   },
-});
+  });
+}

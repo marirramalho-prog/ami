@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { colors } from '../theme/colors';
+import { Colors } from '../theme/colors';
+import { useThemeColors } from '../theme/useThemeColors';
 import { Child } from '../types/child';
 import { Caregiver } from '../types/caregiver';
 import { AgendaEvent, ChecklistTemplate } from '../types/routine';
 import { isSameDay, isSameMonth, monthGrid } from '../utils/calendarDates';
-import { getEventsForDate, TIPO_COR } from '../utils/calendarEvents';
+import { getEventsForDate, tipoCor } from '../utils/calendarEvents';
 
 interface Props {
   mesReferencia: Date;
@@ -29,6 +30,9 @@ export default function MonthlyCalendar({
   onRemoveEvento,
   onOpenChecklist,
 }: Props) {
+  const colors = useThemeColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
+  const TIPO_COR = tipoCor(colors);
   const dias = monthGrid(mesReferencia);
   const hoje = new Date();
   const [selecionado, setSelecionado] = useState<Date>(hoje);
@@ -130,7 +134,8 @@ export default function MonthlyCalendar({
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: Colors) {
+  return StyleSheet.create({
   headerRow: { flexDirection: 'row' },
   headerLabel: {
     flex: 1,
@@ -186,4 +191,5 @@ const styles = StyleSheet.create({
   itemSubtitulo: { fontSize: 12, color: colors.textMuted },
   remove: { fontSize: 11, color: colors.textMuted },
   checklistLink: { fontSize: 11, color: colors.text, fontWeight: '600', marginTop: 2 },
-});
+  });
+}

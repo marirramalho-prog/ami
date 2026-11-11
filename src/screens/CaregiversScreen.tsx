@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,8 @@ import {
   Platform,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { colors } from '../theme/colors';
+import { Colors } from '../theme/colors';
+import { useThemeColors } from '../theme/useThemeColors';
 import { Caregiver } from '../types/caregiver';
 import { loadCaregivers, saveCaregivers } from '../storage/caregiverStorage';
 import { calcularIdade, isValidDatePart } from '../utils/date';
@@ -33,6 +34,8 @@ const emptyForm = {
 };
 
 export default function CaregiversScreen() {
+  const colors = useThemeColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
   const [caregivers, setCaregivers] = useState<Caregiver[]>([]);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -259,7 +262,8 @@ export default function CaregiversScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: Colors) {
+  return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   scrollContent: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 40 },
   title: { fontSize: 24, fontWeight: '700', color: colors.text },
@@ -335,4 +339,5 @@ const styles = StyleSheet.create({
   remove: { color: colors.textMuted, fontSize: 12 },
   cancelEdit: { color: colors.textMuted, fontSize: 12 },
   empty: { textAlign: 'center', color: colors.textMuted, marginTop: 24 },
-});
+  });
+}
