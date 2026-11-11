@@ -141,6 +141,10 @@ export default function ChildrenProfileScreen() {
     >
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         <Text style={styles.title}>Perfis dos filhos</Text>
+        <Text style={styles.privacyNote}>
+          Esses dados ficam guardados só neste aparelho — a Âmi não envia nada pra fora sem te
+          avisar.
+        </Text>
 
         <FlatList
           data={children}
@@ -318,6 +322,11 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '700',
     color: colors.text,
+    marginBottom: 4,
+  },
+  privacyNote: {
+    fontSize: 12,
+    color: colors.textMuted,
     marginBottom: 16,
   },
   form: {
