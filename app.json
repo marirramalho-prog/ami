@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Âmi",
+    "name": "Ami",
     "slug": "ami-app",
     "owner": "marirramalho",
     "version": "1.0.0",
@@ -11,7 +11,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.amiapp.ami",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleDisplayName": "Âmi"
       }
     },
     "android": {
