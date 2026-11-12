@@ -36,6 +36,16 @@ Itens novos, fora do escopo da Fase 8 original (que focou em acessibilidade/nave
 | 21 | Nenhuma tela de consentimento/privacidade (LGPD) — o app já coleta nome/nascimento/escola de crianças (Perfis) sem nenhum texto de transparência sobre uso/armazenamento do dado, mesmo sendo hoje só local | `ChildrenProfileScreen.tsx` | P2 (sobe pra P1 quando o Supabase/contas entrar) | Médio | Alta | ⚠️ **Parcial, 2026-11-11** — nota curta de transparência adicionada em Perfis; ainda falta a tela formal de consentimento (fica pra quando o Supabase entrar) |
 | 22 | Paywall e rótulo de conteúdo patrocinado inexistentes no código | — | — | — | — | Não é defeito: monetização ainda não foi implementada (confirmado em `product-brief.md`). Registrado aqui só pra não ser redescoberto como "bug" depois. |
 
+## QA visual pós-lote (2026-11-12) — achados novos, não corrigidos ainda
+
+Rodado depois de mesclar os PRs #3-#6 na `ami`. Nenhum item abaixo foi causado por este lote — são pré-existentes, achados ao testar as 9 telas em mobile (375px), desktop, claro e escuro.
+
+| # | Item | Onde | Criticidade | Esforço | Confiança | Status |
+|---|---|---|---|---|---|---|
+| 23 | Campo "Fim HH:MM" da Agenda estoura a tela em mobile (375px) — medido via DOM: a borda direita do campo fica em x=420.67 com a tela tendo só 375px de largura, ~46px pra fora. Pré-existente desde o commit `1724732` (antes deste processo de UX), confirmado por `git show` | `AgendaScreen.tsx` (`horaRow`/`horaInput`), possivelmente `HoraInput.tsx` (TextInput sem `minWidth: 0`/`flexShrink`, que no react-native-web pode ignorar `flex: 1` e manter a largura intrínseca do input) | P1 | Baixo-médio | Alta | Pendente |
+| 24 | Motion (`FadeIn`, `ChatBubble`) não verifica `AccessibilityInfo.isReduceMotionEnabled()` — quem ativa "reduzir movimento" no aparelho ainda vê a animação de entrada | `FadeIn.tsx`, `ChatBubble.tsx` | P2 | Baixo | Alta | Pendente |
+| 25 | Fonte dinâmica (Dynamic Type / tamanho de fonte do sistema ampliado) nunca foi testada em nenhuma tela — sem garantia de que o layout não quebra com fonte grande | Todas as telas | — | — | — | Não testado ainda, não é "pendente" classificado — precisa de uma rodada dedicada |
+
 ## Como este arquivo vai crescer
 
 A Fase 8 (auditoria completa, skill `ux-audit-b2c`) classificou os itens #1-13 por criticidade (P0-P3), esforço e confiança, com evidência — a maioria já implementada. A auditoria ampliada de 2026-11-11 acrescentou os itens #14-22, cobrindo dimensões de direção de arte que a Fase 8 não tocou (tokens de tipografia/espaçamento, modo escuro, motion, mascote, consentimento). Nada aqui vira implementação sem sua aprovação explícita.
