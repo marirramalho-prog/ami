@@ -45,8 +45,10 @@ export function getEventsForDate(
   const diaKey = DIAS_SEMANA[date.getDay()].key;
   const itens: CalendarItem[] = [];
 
+  const DIAS_LETIVOS: ReadonlySet<string> = new Set(['seg', 'ter', 'qua', 'qui', 'sex']);
+
   children.forEach((child) => {
-    if (!child.naoVaiEscola && child.escola) {
+    if (!child.naoVaiEscola && child.escola && DIAS_LETIVOS.has(diaKey)) {
       const checklist = checklists.find(
         (t) => t.origemAuto?.childId === child.id && !t.origemAuto?.atividadeId,
       );
