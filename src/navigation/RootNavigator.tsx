@@ -73,10 +73,15 @@ export default function RootNavigator() {
             route.name === 'Âmi' ? (
               <Image source={mascoteIcon} style={{ width: 20, height: 20 }} resizeMode="contain" />
             ) : (
-              <Text style={{ fontSize: 16 }}>{ICONS[route.name]}</Text>
+              <Text allowFontScaling={false} style={{ fontSize: 16 }}>
+                {ICONS[route.name]}
+              </Text>
             ),
+          // allowFontScaling={false}: com a fonte do sistema ampliada (Dynamic Type), o
+          // rótulo de 10px crescia e as 9 abas se sobrepunham — a barra de abas é
+          // "chrome" de navegação compacto por design, não corpo de texto (ux-backlog.md #25)
           tabBarLabel: ({ color }) => (
-            <Text style={{ fontSize: 10, color, textAlign: 'center' }}>
+            <Text allowFontScaling={false} style={{ fontSize: 10, color, textAlign: 'center' }}>
               {TAB_LABELS[route.name] || route.name}
             </Text>
           ),
