@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Colors } from '../theme/colors';
 import { useThemeColors } from '../theme/useThemeColors';
+import FadeIn from './FadeIn';
 import { DailyLog, SleepSchedule } from '../types/sleep';
 import { addDays, isSameDay } from '../utils/calendarDates';
 import { dateKey } from '../utils/date';
@@ -99,38 +100,38 @@ export default function SleepWeeklyCalendar({ inicioSemana, schedule, logs }: Pr
         ) : (
           <>
             {resumoSelecionado.soneca && (
-              <View style={[styles.item, { borderLeftColor: COR_SONECA }]}>
+              <FadeIn style={[styles.item, { borderLeftColor: COR_SONECA }]}>
                 <Text style={styles.itemTitulo}>
                   Soneca{schedule?.horarioSoneca ? ` · ${schedule.horarioSoneca}` : ''}
                   {schedule?.duracaoSoneca ? ` (${schedule.duracaoSoneca})` : ''}
                 </Text>
-              </View>
+              </FadeIn>
             )}
             {resumoSelecionado.log?.status ? (
-              <View style={[styles.item, { borderLeftColor: COR_NOITE }]}>
+              <FadeIn style={[styles.item, { borderLeftColor: COR_NOITE }]}>
                 <Text style={styles.itemTitulo}>{resumoSelecionado.log.status}</Text>
-              </View>
+              </FadeIn>
             ) : null}
             {(resumoSelecionado.log?.horarioDormiu || resumoSelecionado.log?.horarioAcordou) && (
-              <View style={[styles.item, { borderLeftColor: COR_NOITE }]}>
+              <FadeIn style={[styles.item, { borderLeftColor: COR_NOITE }]}>
                 <Text style={styles.itemTitulo}>
                   Dormiu {resumoSelecionado.log?.horarioDormiu || '?'} · acordou{' '}
                   {resumoSelecionado.log?.horarioAcordou || '?'}
                 </Text>
-              </View>
+              </FadeIn>
             )}
             {resumoSelecionado.log?.observacao ? (
-              <View style={[styles.item, { borderLeftColor: COR_NOITE }]}>
+              <FadeIn style={[styles.item, { borderLeftColor: COR_NOITE }]}>
                 <Text style={styles.itemSubtitulo}>{resumoSelecionado.log.observacao}</Text>
-              </View>
+              </FadeIn>
             ) : null}
             {resumoSelecionado.log?.despertares.map((d) => (
-              <View key={d.id} style={[styles.item, { borderLeftColor: COR_NOITE }]}>
+              <FadeIn key={d.id} style={[styles.item, { borderLeftColor: COR_NOITE }]}>
                 <Text style={styles.itemTitulo}>
                   Despertou {d.horarioDespertou || '?'} · dormiu de novo {d.horarioAdormeceu || '?'}
                 </Text>
                 {d.detalhes ? <Text style={styles.itemSubtitulo}>{d.detalhes}</Text> : null}
-              </View>
+              </FadeIn>
             ))}
           </>
         )}

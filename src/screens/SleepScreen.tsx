@@ -16,6 +16,7 @@ import { Colors } from '../theme/colors';
 import { useThemeColors } from '../theme/useThemeColors';
 import { typography } from '../theme/typography';
 import mascoteIcon from '../../assets/mascote/avatar-circular-bust.png';
+import FadeIn from '../components/FadeIn';
 import { Child, childFullName } from '../types/child';
 import {
   DailyLog,
@@ -599,7 +600,7 @@ export default function SleepScreen() {
 
             <Text style={styles.label}>Despertares noturnos</Text>
             {despertaresHoje.map((d) => (
-              <View key={d.id} style={styles.despertarCard}>
+              <FadeIn key={d.id} style={styles.despertarCard}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.despertarTitulo}>
                     Despertou {d.horarioDespertou || '?'} · dormiu de novo{' '}
@@ -617,7 +618,7 @@ export default function SleepScreen() {
                 >
                   <Text style={styles.itemRemove}>×</Text>
                 </Pressable>
-              </View>
+              </FadeIn>
             ))}
 
             <View style={styles.novoDespertar}>

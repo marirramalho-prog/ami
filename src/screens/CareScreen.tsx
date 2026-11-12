@@ -5,6 +5,7 @@ import { Colors } from '../theme/colors';
 import { useThemeColors } from '../theme/useThemeColors';
 import { typography } from '../theme/typography';
 import mascoteIcon from '../../assets/mascote/avatar-circular-bust.png';
+import FadeIn from '../components/FadeIn';
 import { Child, childFullName } from '../types/child';
 import { CareMilestone, CategoriaCuidado } from '../types/careMilestone';
 import { AGENDA_CUIDADOS } from '../data/agendaCuidados';
@@ -161,7 +162,7 @@ export default function CareScreen() {
           {marcosCalculados.map(({ marco, data }) => {
             const mostrarSelo = marco.categoria === 'especialidade' && !marco.validadoPediatra;
             return (
-              <View key={marco.id} style={styles.card}>
+              <FadeIn key={marco.id} style={styles.card}>
                 <View style={styles.cardHeader}>
                   <View style={styles.icone}>
                     <Text style={styles.iconeTexto}>{ICONE_MARCO[marco.id] || '🩺'}</Text>
@@ -193,7 +194,7 @@ export default function CareScreen() {
                     ? ' — confirme com o pediatra da família'
                     : ''}
                 </Text>
-              </View>
+              </FadeIn>
             );
           })}
         </View>

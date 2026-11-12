@@ -41,6 +41,7 @@ import {
 } from '../storage/storyStorage';
 import { generateStory } from '../utils/storyApi';
 import ChipSelector from '../components/ChipSelector';
+import FadeIn from '../components/FadeIn';
 
 interface PersonagemSelecionado {
   id: string;
@@ -473,7 +474,7 @@ export default function StoriesScreen() {
             <Text style={styles.empty}>Nenhuma história gerada ainda.</Text>
           )}
           {stories.map((story) => (
-            <View key={story.id} style={styles.historyCard}>
+            <FadeIn key={story.id} style={styles.historyCard}>
               <Text style={styles.historyMeta}>
                 {story.preferencias.personagens.join(', ')}
                 {story.preferencias.tema ? ` · ${story.preferencias.tema}` : ''}
@@ -481,7 +482,7 @@ export default function StoriesScreen() {
               <Text style={styles.historyText} numberOfLines={4}>
                 {story.texto}
               </Text>
-            </View>
+            </FadeIn>
           ))}
         </View>
       </ScrollView>

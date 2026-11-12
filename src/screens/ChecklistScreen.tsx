@@ -18,6 +18,7 @@ import { loadChecklists, saveChecklists } from '../storage/routineStorage';
 import { confirmAction } from '../utils/confirm';
 import { loadChildren } from '../storage/childrenStorage';
 import { syncChecklistsForAllChildren } from '../utils/checklistSync';
+import FadeIn from '../components/FadeIn';
 
 const TIPOS_SUGERIDOS = ['Rotina escolar', 'Passeio', 'Viagem', 'Fim de semana'];
 
@@ -189,7 +190,7 @@ export default function ChecklistScreen() {
             const totalItens = template.itens.length;
             const feitos = template.itens.filter((i) => i.feito).length;
             return (
-            <View
+            <FadeIn
               key={template.id}
               style={[styles.card, template.id === highlightId && styles.cardDestacado]}
             >
@@ -261,7 +262,7 @@ export default function ChecklistScreen() {
                   <Text style={styles.addItemButtonText}>+</Text>
                 </Pressable>
               </View>
-            </View>
+            </FadeIn>
             );
           })}
         </View>

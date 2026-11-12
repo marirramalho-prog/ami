@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Colors } from '../theme/colors';
 import { useThemeColors } from '../theme/useThemeColors';
+import FadeIn from './FadeIn';
 import { Child } from '../types/child';
 import { Caregiver } from '../types/caregiver';
 import { AgendaEvent, ChecklistTemplate } from '../types/routine';
@@ -89,29 +90,30 @@ export default function WeeklyCalendar({
           itensSelecionado.map((item) => {
             const temChecklist = !!item.checklistTemplateId && !!onOpenChecklist;
             return (
-              <Pressable
-                key={item.id}
-                style={[styles.item, { borderLeftColor: TIPO_COR[item.tipo] }]}
-                onPress={
-                  temChecklist ? () => onOpenChecklist!(item.checklistTemplateId!) : undefined
-                }
-              >
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.itemTitulo}>
-                    {item.hora ? `${item.hora} · ` : ''}
-                    {item.titulo}
-                  </Text>
-                  {item.subtitulo ? (
-                    <Text style={styles.itemSubtitulo}>{item.subtitulo}</Text>
-                  ) : null}
-                  {temChecklist && <Text style={styles.checklistLink}>ver checklist</Text>}
-                </View>
-                {item.tipo === 'evento' && onRemoveEvento && (
-                  <Pressable onPress={() => onRemoveEvento(item.id.replace('evento-', ''))}>
-                    <Text style={styles.remove}>remover</Text>
-                  </Pressable>
-                )}
-              </Pressable>
+              <FadeIn key={item.id}>
+                <Pressable
+                  style={[styles.item, { borderLeftColor: TIPO_COR[item.tipo] }]}
+                  onPress={
+                    temChecklist ? () => onOpenChecklist!(item.checklistTemplateId!) : undefined
+                  }
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.itemTitulo}>
+                      {item.hora ? `${item.hora} · ` : ''}
+                      {item.titulo}
+                    </Text>
+                    {item.subtitulo ? (
+                      <Text style={styles.itemSubtitulo}>{item.subtitulo}</Text>
+                    ) : null}
+                    {temChecklist && <Text style={styles.checklistLink}>ver checklist</Text>}
+                  </View>
+                  {item.tipo === 'evento' && onRemoveEvento && (
+                    <Pressable onPress={() => onRemoveEvento(item.id.replace('evento-', ''))}>
+                      <Text style={styles.remove}>remover</Text>
+                    </Pressable>
+                  )}
+                </Pressable>
+              </FadeIn>
             );
           })
         )}
