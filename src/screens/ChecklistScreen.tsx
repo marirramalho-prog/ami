@@ -12,6 +12,7 @@ import {
 import { useFocusEffect, useRoute } from '@react-navigation/native';
 import { Colors } from '../theme/colors';
 import { useThemeColors } from '../theme/useThemeColors';
+import { typography } from '../theme/typography';
 import { ChecklistTemplate } from '../types/routine';
 import { loadChecklists, saveChecklists } from '../storage/routineStorage';
 import { confirmAction } from '../utils/confirm';
@@ -273,7 +274,7 @@ function getStyles(colors: Colors) {
   return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   scrollContent: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 40 },
-  title: { fontSize: 24, fontWeight: '700', color: colors.text, marginBottom: 16 },
+  title: { ...typography.title, color: colors.text, marginBottom: 16 },
   novoChecklistButton: {
     backgroundColor: colors.primary,
     borderRadius: 12,

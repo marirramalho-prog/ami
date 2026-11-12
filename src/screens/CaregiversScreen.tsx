@@ -13,6 +13,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../theme/colors';
 import { useThemeColors } from '../theme/useThemeColors';
+import { typography } from '../theme/typography';
 import { Caregiver } from '../types/caregiver';
 import { loadCaregivers, saveCaregivers } from '../storage/caregiverStorage';
 import { calcularIdade, isValidDatePart } from '../utils/date';
@@ -266,7 +267,7 @@ function getStyles(colors: Colors) {
   return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   scrollContent: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 40 },
-  title: { fontSize: 24, fontWeight: '700', color: colors.text },
+  title: { ...typography.title, color: colors.text },
   subtitle: { fontSize: 13, color: colors.textMuted, marginTop: 2, marginBottom: 16 },
   form: {
     backgroundColor: colors.card,

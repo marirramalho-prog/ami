@@ -13,6 +13,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../theme/colors';
 import { useThemeColors } from '../theme/useThemeColors';
+import { typography } from '../theme/typography';
 import { Child, childFullName, Turno } from '../types/child';
 import { AtividadeExtracurricular } from '../types/weeklyRoutine';
 import { loadChildren, saveChildren } from '../storage/childrenStorage';
@@ -323,8 +324,7 @@ function getStyles(colors: Colors) {
     paddingBottom: 40,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '700',
+    ...typography.title,
     color: colors.text,
     marginBottom: 4,
   },

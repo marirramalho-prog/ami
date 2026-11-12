@@ -13,6 +13,7 @@ import {
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Colors } from '../theme/colors';
 import { useThemeColors } from '../theme/useThemeColors';
+import { typography } from '../theme/typography';
 import { Child } from '../types/child';
 import { Caregiver } from '../types/caregiver';
 import { AgendaEvent, ChecklistTemplate } from '../types/routine';
@@ -348,7 +349,7 @@ function getStyles(colors: Colors) {
   return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   scrollContent: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 40 },
-  title: { fontSize: 24, fontWeight: '700', color: colors.text, marginBottom: 16 },
+  title: { ...typography.title, color: colors.text, marginBottom: 16 },
   form: {
     backgroundColor: colors.card,
     borderRadius: 16,

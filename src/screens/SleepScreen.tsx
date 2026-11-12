@@ -14,6 +14,7 @@ import {
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Colors } from '../theme/colors';
 import { useThemeColors } from '../theme/useThemeColors';
+import { typography } from '../theme/typography';
 import mascoteIcon from '../../assets/mascote/avatar-circular-bust.png';
 import { Child, childFullName } from '../types/child';
 import {
@@ -681,7 +682,7 @@ function getStyles(colors: Colors) {
   container: { flex: 1, backgroundColor: colors.background },
   center: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20 },
   scrollContent: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 40 },
-  title: { fontSize: 24, fontWeight: '700', color: colors.text },
+  title: { ...typography.title, color: colors.text },
   subtitle: { fontSize: 13, color: colors.textMuted, marginTop: 2, marginBottom: 12 },
   empty: { textAlign: 'center', color: colors.textMuted, marginTop: 12 },
   mascoteEmpty: { width: 56, height: 56, marginBottom: 12 },
