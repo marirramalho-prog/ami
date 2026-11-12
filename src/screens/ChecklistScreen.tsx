@@ -8,6 +8,7 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import { useFocusEffect, useRoute } from '@react-navigation/native';
 import { Colors } from '../theme/colors';
@@ -19,6 +20,7 @@ import { confirmAction } from '../utils/confirm';
 import { loadChildren } from '../storage/childrenStorage';
 import { syncChecklistsForAllChildren } from '../utils/checklistSync';
 import FadeIn from '../components/FadeIn';
+import mascoteIcon from '../../assets/mascote/avatar-circular-bust.png';
 
 const TIPOS_SUGERIDOS = ['Rotina escolar', 'Passeio', 'Viagem', 'Fim de semana'];
 
@@ -181,10 +183,13 @@ export default function ChecklistScreen() {
 
         <View style={styles.list}>
           {templates.length === 0 && (
-            <Text style={styles.empty}>
-              🧚 Nenhum checklist por aqui ainda — cria um ali em cima pra te ajudar a não
-              esquecer nada na próxima rotina, passeio ou viagem.
-            </Text>
+            <View style={styles.emptyState}>
+              <Image source={mascoteIcon} style={styles.mascoteEmpty} resizeMode="contain" />
+              <Text style={styles.empty}>
+                Nenhum checklist por aqui ainda — cria um ali em cima pra te ajudar a não
+                esquecer nada na próxima rotina, passeio ou viagem.
+              </Text>
+            </View>
           )}
           {templates.map((template) => {
             const totalItens = template.itens.length;
@@ -387,5 +392,7 @@ function getStyles(colors: Colors) {
   },
   addItemButtonText: { fontSize: 18, fontWeight: '700', color: colors.text },
   empty: { textAlign: 'center', color: colors.textMuted, marginTop: 8, lineHeight: 20 },
+  emptyState: { alignItems: 'center' },
+  mascoteEmpty: { width: 40, height: 40, marginBottom: 4 },
   });
 }

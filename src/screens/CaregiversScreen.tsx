@@ -9,11 +9,13 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../theme/colors';
 import { useThemeColors } from '../theme/useThemeColors';
 import { typography } from '../theme/typography';
+import mascoteIcon from '../../assets/mascote/avatar-circular-bust.png';
 import { Caregiver } from '../types/caregiver';
 import { loadCaregivers, saveCaregivers } from '../storage/caregiverStorage';
 import { calcularIdade, isValidDatePart } from '../utils/date';
@@ -170,7 +172,10 @@ export default function CaregiversScreen() {
             );
           }}
           ListEmptyComponent={
-            <Text style={styles.empty}>Nenhum cuidador cadastrado ainda.</Text>
+            <View style={styles.emptyState}>
+              <Image source={mascoteIcon} style={styles.mascoteEmpty} resizeMode="contain" />
+              <Text style={styles.empty}>Nenhum cuidador cadastrado ainda.</Text>
+            </View>
           }
         />
 
@@ -341,5 +346,7 @@ function getStyles(colors: Colors) {
   remove: { color: colors.textMuted, fontSize: 12 },
   cancelEdit: { color: colors.textMuted, fontSize: 12 },
   empty: { textAlign: 'center', color: colors.textMuted, marginTop: 24 },
+  emptyState: { alignItems: 'center' },
+  mascoteEmpty: { width: 40, height: 40, marginBottom: 4 },
   });
 }
