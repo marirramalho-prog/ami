@@ -70,6 +70,9 @@ function getStyles(colors: Colors) {
       paddingVertical: 10,
       color: colors.text,
       backgroundColor: colors.brancoSuave,
+      // sem isso, o react-native-web ignora o flex:1 do pai e mantém a
+      // largura intrínseca do <input>, estourando a tela em mobile (#23)
+      minWidth: 0,
     },
   });
 }
