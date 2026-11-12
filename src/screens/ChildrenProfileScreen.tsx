@@ -9,11 +9,13 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../theme/colors';
 import { useThemeColors } from '../theme/useThemeColors';
 import { typography } from '../theme/typography';
+import mascoteIcon from '../../assets/mascote/avatar-circular-bust.png';
 import { Child, childFullName, Turno } from '../types/child';
 import { AtividadeExtracurricular } from '../types/weeklyRoutine';
 import { loadChildren, saveChildren } from '../storage/childrenStorage';
@@ -201,7 +203,10 @@ export default function ChildrenProfileScreen() {
             );
           }}
           ListEmptyComponent={
-            <Text style={styles.empty}>Nenhum perfil cadastrado ainda.</Text>
+            <View style={styles.emptyState}>
+              <Image source={mascoteIcon} style={styles.mascoteEmpty} resizeMode="contain" />
+              <Text style={styles.empty}>Nenhum perfil cadastrado ainda.</Text>
+            </View>
           }
         />
 
@@ -490,5 +495,7 @@ function getStyles(colors: Colors) {
     color: colors.textMuted,
     marginTop: 24,
   },
+  emptyState: { alignItems: 'center' },
+  mascoteEmpty: { width: 40, height: 40, marginBottom: 4 },
   });
 }

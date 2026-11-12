@@ -10,6 +10,7 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../theme/colors';
@@ -42,6 +43,7 @@ import {
 import { generateStory } from '../utils/storyApi';
 import ChipSelector from '../components/ChipSelector';
 import FadeIn from '../components/FadeIn';
+import mascoteIcon from '../../assets/mascote/avatar-circular-bust.png';
 
 interface PersonagemSelecionado {
   id: string;
@@ -471,7 +473,10 @@ export default function StoriesScreen() {
         <View style={styles.list}>
           <Text style={styles.sectionTitle}>Histórico</Text>
           {stories.length === 0 && (
-            <Text style={styles.empty}>Nenhuma história gerada ainda.</Text>
+            <View style={styles.emptyState}>
+              <Image source={mascoteIcon} style={styles.mascoteEmpty} resizeMode="contain" />
+              <Text style={styles.empty}>Nenhuma história gerada ainda.</Text>
+            </View>
           )}
           {stories.map((story) => (
             <FadeIn key={story.id} style={styles.historyCard}>
@@ -564,6 +569,8 @@ function getStyles(colors: Colors) {
   storyText: { fontSize: 14, color: colors.text, lineHeight: 21 },
   list: { marginTop: 20, gap: 10 },
   empty: { textAlign: 'center', color: colors.textMuted, marginTop: 8 },
+  emptyState: { alignItems: 'center' },
+  mascoteEmpty: { width: 40, height: 40, marginBottom: 4 },
   historyCard: {
     backgroundColor: colors.card,
     borderRadius: 14,
