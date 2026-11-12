@@ -23,6 +23,7 @@ import AvatarPicker, { AVATAR_OPTIONS } from '../components/AvatarPicker';
 import TurnoSelector from '../components/TurnoSelector';
 import AtividadesEditor, { resumoDias } from '../components/AtividadesEditor';
 import DateFields from '../components/DateFields';
+import FadeIn from '../components/FadeIn';
 import { syncChecklistsForAllChildren, removeChecklistsForChild } from '../utils/checklistSync';
 import { confirmAction } from '../utils/confirm';
 
@@ -160,7 +161,7 @@ export default function ChildrenProfileScreen() {
             const turnoLabel = item.turnoEscolar ? TURNO_LABEL[item.turnoEscolar] : '';
             const escolaLabel = item.naoVaiEscola ? 'Não vai à escola' : item.escola;
             return (
-              <View style={styles.card}>
+              <FadeIn style={styles.card}>
                 <View style={styles.cardHeader}>
                   <Text style={styles.cardAvatar}>{item.avatar}</Text>
                   <View style={{ flex: 1 }}>
@@ -196,7 +197,7 @@ export default function ChildrenProfileScreen() {
                 {item.observacoes ? (
                   <Text style={styles.cardTags}>Obs: {item.observacoes}</Text>
                 ) : null}
-              </View>
+              </FadeIn>
             );
           }}
           ListEmptyComponent={

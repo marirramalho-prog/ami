@@ -20,6 +20,7 @@ import { calcularIdade, isValidDatePart } from '../utils/date';
 import { confirmAction } from '../utils/confirm';
 import ChipSelector from '../components/ChipSelector';
 import DateFields from '../components/DateFields';
+import FadeIn from '../components/FadeIn';
 
 const RELACOES = ['Mãe', 'Pai', 'Avó', 'Avô', 'Babá'];
 
@@ -140,7 +141,7 @@ export default function CaregiversScreen() {
           renderItem={({ item }) => {
             const idade = calcularIdade(item.dataNascimento);
             return (
-              <View style={styles.card}>
+              <FadeIn style={styles.card}>
                 <View style={{ flex: 1 }}>
                   <View style={styles.nomeRow}>
                     <Text style={styles.cardName}>{item.nomeCompleto}</Text>
@@ -165,7 +166,7 @@ export default function CaregiversScreen() {
                 <Pressable onPress={() => handleRemove(item.id)}>
                   <Text style={styles.remove}>remover</Text>
                 </Pressable>
-              </View>
+              </FadeIn>
             );
           }}
           ListEmptyComponent={

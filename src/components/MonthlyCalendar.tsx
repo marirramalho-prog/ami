@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Colors } from '../theme/colors';
 import { useThemeColors } from '../theme/useThemeColors';
+import FadeIn from './FadeIn';
 import { Child } from '../types/child';
 import { Caregiver } from '../types/caregiver';
 import { AgendaEvent, ChecklistTemplate } from '../types/routine';
@@ -103,8 +104,8 @@ export default function MonthlyCalendar({
           itensSelecionado.map((item) => {
             const temChecklist = !!item.checklistTemplateId && !!onOpenChecklist;
             return (
+              <FadeIn key={item.id}>
               <Pressable
-                key={item.id}
                 style={[styles.item, { borderLeftColor: TIPO_COR[item.tipo] }]}
                 onPress={
                   temChecklist ? () => onOpenChecklist!(item.checklistTemplateId!) : undefined
@@ -126,6 +127,7 @@ export default function MonthlyCalendar({
                   </Pressable>
                 )}
               </Pressable>
+              </FadeIn>
             );
           })
         )}

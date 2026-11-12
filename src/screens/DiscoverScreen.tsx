@@ -5,6 +5,7 @@ import { useThemeColors } from '../theme/useThemeColors';
 import { typography } from '../theme/typography';
 import { mockActivities, PILOT_CITY } from '../data/mockActivities';
 import { ActivityCategory } from '../types/activity';
+import FadeIn from '../components/FadeIn';
 
 const CATEGORIAS: (ActivityCategory | 'Todas')[] = ['Todas', 'Extracurricular', 'Fim de semana'];
 
@@ -70,7 +71,7 @@ export default function DiscoverScreen() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         renderItem={({ item }) => (
-          <View style={styles.card}>
+          <FadeIn style={styles.card}>
             <Text style={styles.cardName}>{item.nome}</Text>
             <Text style={styles.cardDetail}>
               {item.tipo} · {item.bairro} · {item.faixaEtaria}
@@ -79,7 +80,7 @@ export default function DiscoverScreen() {
               {item.horario} · {item.preco}
             </Text>
             <Text style={styles.cardDescription}>{item.descricao}</Text>
-          </View>
+          </FadeIn>
         )}
         ListEmptyComponent={
           <Text style={styles.empty}>Nenhum resultado para essa busca.</Text>
