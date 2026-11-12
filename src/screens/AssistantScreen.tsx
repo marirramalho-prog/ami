@@ -14,6 +14,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../theme/colors';
 import { useThemeColors } from '../theme/useThemeColors';
+import { typography } from '../theme/typography';
 import { Child } from '../types/child';
 import { loadChildren } from '../storage/childrenStorage';
 import { ChatConversation, ChatMessage } from '../types/chat';
@@ -281,7 +282,7 @@ function getStyles(colors: Colors) {
     marginBottom: 12,
   },
   avatar: { width: 32, height: 32 },
-  title: { fontSize: 22, fontWeight: '700', color: colors.text, flex: 1 },
+  title: { ...typography.title, fontSize: 22, color: colors.text, flex: 1 },
   titleLogo: { flex: 1, justifyContent: 'center' },
   // wordmark oficial (assets/marca/ami-wordmark.png, proporção 621x310)
   wordmark: { height: 30, width: 60 },

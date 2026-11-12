@@ -3,6 +3,7 @@ import { View, Text, Pressable, ScrollView, StyleSheet, Image } from 'react-nati
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Colors } from '../theme/colors';
 import { useThemeColors } from '../theme/useThemeColors';
+import { typography } from '../theme/typography';
 import mascoteIcon from '../../assets/mascote/avatar-circular-bust.png';
 import { Child, childFullName } from '../types/child';
 import { CareMilestone, CategoriaCuidado } from '../types/careMilestone';
@@ -212,7 +213,7 @@ function getStyles(colors: Colors) {
     paddingBottom: 16,
   },
   scrollContent: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 40 },
-  title: { fontSize: 24, fontWeight: '700', color: colors.text },
+  title: { ...typography.title, color: colors.text },
   subtitle: { fontSize: 13, color: colors.textMuted, marginTop: 4 },
   empty: { textAlign: 'center', color: colors.textMuted, marginTop: 12 },
   mascoteEmpty: { width: 56, height: 56, marginBottom: 12 },

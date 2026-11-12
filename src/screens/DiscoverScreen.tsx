@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { View, Text, TextInput, Pressable, FlatList, StyleSheet } from 'react-native';
 import { Colors } from '../theme/colors';
 import { useThemeColors } from '../theme/useThemeColors';
+import { typography } from '../theme/typography';
 import { mockActivities, PILOT_CITY } from '../data/mockActivities';
 import { ActivityCategory } from '../types/activity';
 
@@ -96,7 +97,7 @@ function getStyles(colors: Colors) {
     paddingHorizontal: 20,
     paddingTop: 60,
   },
-  title: { fontSize: 24, fontWeight: '700', color: colors.text },
+  title: { ...typography.title, color: colors.text },
   city: { fontSize: 13, color: colors.textMuted, marginTop: 2, marginBottom: 12 },
   banner: {
     backgroundColor: colors.lavandaClaro,
