@@ -75,6 +75,14 @@ import {
   cancelarNotificacoes,
 } from '../utils/desfraldeNotifications';
 import { todayKey } from '../utils/date';
+import {
+  calcularPeriodoRelatorio,
+  montarTextoRelatorio,
+  montarTextoResumoCompartilhavel,
+  PeriodoRelatorio,
+  proximaReferencia,
+} from '../utils/desfraldeRelatorio';
+import { compartilharTexto } from '../utils/desfraldeShare';
 
 const FASES: { valor: FaseDesfralde; label: string }[] = [
   { valor: 'preparar', label: 'Preparar' },
@@ -216,6 +224,9 @@ export default function DesfraldeScreen() {
   const [horaInicioForm, setHoraInicioForm] = useState('08:00');
   const [horaFimForm, setHoraFimForm] = useState('19:00');
   const [lembreteSinaisAgendado, setLembreteSinaisAgendado] = useState(false);
+
+  const [periodoRelatorio, setPeriodoRelatorio] = useState<PeriodoRelatorio>('semana');
+  const [referenciaRelatorio, setReferenciaRelatorio] = useState(new Date());
 
   const [editandoConfig, setEditandoConfig] = useState(false);
   const [lerGuiaSemProcesso, setLerGuiaSemProcesso] = useState(false);
@@ -693,6 +704,43 @@ export default function DesfraldeScreen() {
       3,
     );
     setLembreteSinaisAgendado(true);
+  }
+
+  const periodoRelatorioInfo = useMemo(
+    () => calcularPeriodoRelatorio(periodoRelatorio, referenciaRelatorio),
+    [periodoRelatorio, referenciaRelatorio],
+  );
+
+  async function handleCompartilharRelatorio() {
+    if (!processo || !child) return;
+    const texto = montarTextoRelatorio({
+      nomeCrianca: childFullName(child),
+      de: periodoRelatorioInfo.de,
+      ate: periodoRelatorioInfo.ate,
+      labelPeriodo: periodoRelatorioInfo.label,
+      registros: registrosDoProcesso,
+      sinais: sinaisDoFilho,
+      conquistas: conquistasDoProcesso,
+      labelConquista: LABEL_CONQUISTA,
+    });
+    const resultado = await compartilharTexto(`Relatório de desfralde — ${childFullName(child)}`, texto);
+    if (resultado === 'copiado') Alert.alert('Relatório copiado', 'Cole onde quiser compartilhar.');
+  }
+
+  async function handleCompartilharResumo() {
+    if (!processo || !child || !config) return;
+    const texto = montarTextoResumoCompartilhavel({
+      nomeCrianca: childFullName(child),
+      fase: processo.faseAtual,
+      labelFase: FASES.find((f) => f.valor === processo.faseAtual)?.label || '',
+      config,
+      labelRecipiente: LABEL_RECIPIENTE,
+      horaInicio: lembreteBanheiro?.ativo ? lembreteBanheiro.horaInicio : undefined,
+      horaFim: lembreteBanheiro?.ativo ? lembreteBanheiro.horaFim : undefined,
+      diasSemanaLabel: lembreteBanheiro?.ativo ? lembreteBanheiro.diasSemana.join(', ') : undefined,
+    });
+    const resultado = await compartilharTexto(`Resumo do desfralde — ${childFullName(child)}`, texto);
+    if (resultado === 'copiado') Alert.alert('Resumo copiado', 'Cole onde quiser compartilhar.');
   }
 
   const outrosCuidadores = caregivers.filter((c) => !c.principal && c.id !== currentCaregiver?.id);
@@ -1208,6 +1256,54 @@ export default function DesfraldeScreen() {
           </View>
         )}
 
+        {processo && permissaoAtual.podeVer && (
+          <View style={[styles.form, { marginTop: 16 }]}>
+            <Text style={styles.sectionTitle}>Relatório e resumo compartilhável</Text>
+
+            <ChipSelector
+              label="Período do relatório"
+              options={['Semana', 'Mês']}
+              value={periodoRelatorio === 'semana' ? 'Semana' : 'Mês'}
+              onChange={(l) => {
+                setPeriodoRelatorio(l === 'Semana' ? 'semana' : 'mes');
+                setReferenciaRelatorio(new Date());
+              }}
+            />
+            <View style={styles.navRow}>
+              <Pressable
+                onPress={() => setReferenciaRelatorio((atual) => proximaReferencia(periodoRelatorio, atual, -1))}
+                accessibilityRole="button"
+                accessibilityLabel="Período anterior"
+              >
+                <Text style={styles.navSeta}>◀</Text>
+              </Pressable>
+              <Pressable onPress={() => setReferenciaRelatorio(new Date())}>
+                <Text style={styles.navLabel}>{periodoRelatorioInfo.label}</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setReferenciaRelatorio((atual) => proximaReferencia(periodoRelatorio, atual, 1))}
+                accessibilityRole="button"
+                accessibilityLabel="Próximo período"
+              >
+                <Text style={styles.navSeta}>▶</Text>
+              </Pressable>
+            </View>
+            <Pressable style={styles.secondaryButton} onPress={handleCompartilharRelatorio} accessibilityRole="button">
+              <Text style={styles.secondaryButtonText}>📄 Compartilhar relatório do período</Text>
+            </Pressable>
+
+            <View style={styles.divider} />
+
+            <Text style={styles.helper}>
+              Resumo com a fase atual, combinados e horários — pra escola, babá ou outro cuidador. Não inclui os
+              registros detalhados do dia a dia.
+            </Text>
+            <Pressable style={styles.secondaryButton} onPress={handleCompartilharResumo} accessibilityRole="button">
+              <Text style={styles.secondaryButtonText}>🎒 Compartilhar resumo pra escola/babá</Text>
+            </Pressable>
+          </View>
+        )}
+
         {processo && (
           <View style={[styles.form, { marginTop: 16 }]}>
             <Text style={styles.sectionTitle}>Conquistas</Text>
@@ -1408,5 +1504,8 @@ function getStyles(colors: Colors) {
       gap: 6,
     },
     avisoGuia: { fontSize: 12, color: colors.textMuted, marginBottom: 4 },
+    navRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 20 },
+    navSeta: { fontSize: 16, color: colors.text, paddingHorizontal: 8 },
+    navLabel: { fontSize: 14, fontWeight: '700', color: colors.text, textTransform: 'capitalize' },
   });
 }
