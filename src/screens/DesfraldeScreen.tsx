@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -22,14 +22,18 @@ import ChipSelector from '../components/ChipSelector';
 import HoraInput from '../components/HoraInput';
 import GuiaDesfraldeCard from '../components/GuiaDesfraldeCard';
 import DesfraldePainel from '../components/DesfraldePainel';
+import DiasSemanaSelector from '../components/DiasSemanaSelector';
+import CaregiverSelector from '../components/CaregiverSelector';
 import { Child, childFullName } from '../types/child';
 import { Caregiver } from '../types/caregiver';
+import { DiaKey } from '../types/weeklyRoutine';
 import {
   AmbienteRegistroDesfralde,
   CodigoSinalProntidao,
   ConteudoRegistroDesfralde,
   DesfraldeConfiguracao,
   DesfraldeConquista,
+  DesfraldeLembrete,
   DesfraldePermissao,
   DesfraldeProcesso,
   DesfraldeRegistro,
@@ -48,12 +52,14 @@ import { loadCaregivers } from '../storage/caregiverStorage';
 import {
   loadConfiguracoes,
   loadConquistas,
+  loadLembretes,
   loadPermissoes,
   loadProcessos,
   loadRegistros,
   loadSinais,
   saveConfiguracoes,
   saveConquistas,
+  saveLembretes,
   savePermissoes,
   saveProcessos,
   saveRegistros,
@@ -62,6 +68,12 @@ import {
 import { CATALOGO_SINAIS_PRONTIDAO } from '../data/sinaisProntidaoDesfralde';
 import { CONTEUDO_GUIA_DESFRALDE } from '../data/conteudoGuiaDesfralde';
 import { obterPermissaoEfetiva, PermissaoEfetivaDesfralde } from '../utils/desfraldePermissoes';
+import {
+  agendarLembreteBanheiro,
+  agendarLembreteRevisarFase,
+  agendarLembreteRevisarSinais,
+  cancelarNotificacoes,
+} from '../utils/desfraldeNotifications';
 import { todayKey } from '../utils/date';
 
 const FASES: { valor: FaseDesfralde; label: string }[] = [
@@ -197,6 +209,13 @@ export default function DesfraldeScreen() {
   const [registros, setRegistros] = useState<DesfraldeRegistro[]>([]);
   const [conquistas, setConquistas] = useState<DesfraldeConquista[]>([]);
   const [permissoes, setPermissoes] = useState<DesfraldePermissao[]>([]);
+  const [lembretes, setLembretes] = useState<DesfraldeLembrete[]>([]);
+
+  const [diasSemanaForm, setDiasSemanaForm] = useState<DiaKey[]>(['seg', 'ter', 'qua', 'qui', 'sex']);
+  const [destinatariosForm, setDestinatariosForm] = useState<string[]>([]);
+  const [horaInicioForm, setHoraInicioForm] = useState('08:00');
+  const [horaFimForm, setHoraFimForm] = useState('19:00');
+  const [lembreteSinaisAgendado, setLembreteSinaisAgendado] = useState(false);
 
   const [editandoConfig, setEditandoConfig] = useState(false);
   const [lerGuiaSemProcesso, setLerGuiaSemProcesso] = useState(false);
@@ -224,7 +243,19 @@ export default function DesfraldeScreen() {
         loadRegistros(),
         loadConquistas(),
         loadPermissoes(),
-      ]).then(([childList, caregiverList, sinaisList, processoList, configList, registroList, conquistaList, permissaoList]) => {
+        loadLembretes(),
+      ]).then(
+        ([
+          childList,
+          caregiverList,
+          sinaisList,
+          processoList,
+          configList,
+          registroList,
+          conquistaList,
+          permissaoList,
+          lembreteList,
+        ]) => {
         setChildren(childList);
         setCaregivers(caregiverList);
         setSinais(sinaisList);
@@ -233,6 +264,7 @@ export default function DesfraldeScreen() {
         setRegistros(registroList);
         setConquistas(conquistaList);
         setPermissoes(permissaoList);
+        setLembretes(lembreteList);
         const childIdDaRota = route.params?.childId;
         setChildId((prev) => {
           if (childIdDaRota && childList.some((c) => c.id === childIdDaRota)) return childIdDaRota;
@@ -279,6 +311,23 @@ export default function DesfraldeScreen() {
     () => (processo ? conquistas.filter((c) => c.processoId === processo.id) : []),
     [conquistas, processo],
   );
+  const lembretesDoProcesso = useMemo(
+    () => (processo ? lembretes.filter((l) => l.processoId === processo.id) : []),
+    [lembretes, processo],
+  );
+  const lembreteBanheiro = lembretesDoProcesso.find((l) => l.tipo === 'banheiro') || null;
+  const lembreteRevisarFase = lembretesDoProcesso.find((l) => l.tipo === 'revisar_fase') || null;
+
+  // Preenche o formulário de lembrete de banheiro com o que já está salvo,
+  // só quando o lembrete carregado muda de verdade (não a cada render).
+  useEffect(() => {
+    if (!lembreteBanheiro) return;
+    setDiasSemanaForm(lembreteBanheiro.diasSemana);
+    setDestinatariosForm(lembreteBanheiro.destinatarios);
+    setHoraInicioForm(lembreteBanheiro.horaInicio || '08:00');
+    setHoraFimForm(lembreteBanheiro.horaFim || '19:00');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lembreteBanheiro?.id]);
 
   // Não há login real no app — o cuidador "principal" marcado em Cuidadores
   // (CaregiversScreen) é quem usa este aparelho. Sem ninguém marcado assim
@@ -547,6 +596,105 @@ export default function DesfraldeScreen() {
     await saveConquistas(lista);
   }
 
+  async function persistLembrete(atualizado: DesfraldeLembrete) {
+    const outros = lembretes.filter((l) => l.id !== atualizado.id);
+    const lista = [...outros, atualizado];
+    setLembretes(lista);
+    await saveLembretes(lista);
+  }
+
+  function montarRascunhoLembreteBanheiro(): DesfraldeLembrete {
+    return {
+      id: lembreteBanheiro?.id || `${processo?.id}_banheiro`,
+      processoId: processo?.id || '',
+      tipo: 'banheiro',
+      modoHorario: config?.modoHorario || 'intervalo',
+      intervaloMin: config?.intervaloMin || '120',
+      momentos: config?.momentos || [],
+      horaInicio: horaInicioForm,
+      horaFim: horaFimForm,
+      diasSemana: diasSemanaForm,
+      destinatarios: destinatariosForm,
+      ativo: lembreteBanheiro?.ativo || false,
+      notificationIds: lembreteBanheiro?.notificationIds || [],
+    };
+  }
+
+  function textoLembreteBanheiro() {
+    return {
+      titulo: 'Âmi — hora do banheiro',
+      corpo: child ? `Hora de levar ${childFullName(child)} ao banheiro.` : 'Hora de ir ao banheiro.',
+    };
+  }
+
+  async function handleToggleLembreteBanheiro(ativar: boolean) {
+    if (!processo || !config || !permissaoAtual.podeConfigurar) return;
+    if (!ativar) {
+      if (lembreteBanheiro) {
+        await cancelarNotificacoes(lembreteBanheiro.notificationIds);
+        await persistLembrete({ ...lembreteBanheiro, ativo: false, notificationIds: [] });
+      }
+      return;
+    }
+    const rascunho = montarRascunhoLembreteBanheiro();
+    const { titulo, corpo } = textoLembreteBanheiro();
+    const ids = await agendarLembreteBanheiro(rascunho, titulo, corpo);
+    await persistLembrete({ ...rascunho, ativo: true, notificationIds: ids });
+  }
+
+  async function handleSalvarHorariosLembreteBanheiro() {
+    if (!processo || !lembreteBanheiro?.ativo || !permissaoAtual.podeConfigurar) return;
+    await cancelarNotificacoes(lembreteBanheiro.notificationIds);
+    const rascunho = montarRascunhoLembreteBanheiro();
+    const { titulo, corpo } = textoLembreteBanheiro();
+    const ids = await agendarLembreteBanheiro(rascunho, titulo, corpo);
+    await persistLembrete({ ...rascunho, ativo: true, notificationIds: ids });
+  }
+
+  async function handleToggleLembreteRevisarFase(ativar: boolean) {
+    if (!processo || !permissaoAtual.podeConfigurar) return;
+    if (!ativar) {
+      if (lembreteRevisarFase) {
+        await cancelarNotificacoes(lembreteRevisarFase.notificationIds);
+        await persistLembrete({ ...lembreteRevisarFase, ativo: false, notificationIds: [] });
+      }
+      return;
+    }
+    const id = await agendarLembreteRevisarFase(
+      'Âmi — revisar a fase do desfralde',
+      child
+        ? `Hora de revisar como está a fase do desfralde de ${childFullName(child)}.`
+        : 'Hora de revisar a fase do desfralde.',
+    );
+    const base: DesfraldeLembrete =
+      lembreteRevisarFase || {
+        id: `${processo.id}_revisar_fase`,
+        processoId: processo.id,
+        tipo: 'revisar_fase',
+        modoHorario: 'intervalo',
+        intervaloMin: '',
+        momentos: [],
+        horaInicio: '',
+        horaFim: '',
+        diasSemana: [],
+        destinatarios: [],
+        ativo: false,
+        notificationIds: [],
+      };
+    await persistLembrete({ ...base, ativo: true, notificationIds: id ? [id] : [] });
+  }
+
+  async function handleLembrarRevisarSinais() {
+    await agendarLembreteRevisarSinais(
+      'Âmi — revisar os sinais de prontidão',
+      child
+        ? `Hora de revisar os sinais de prontidão de ${childFullName(child)}.`
+        : 'Hora de revisar os sinais de prontidão.',
+      3,
+    );
+    setLembreteSinaisAgendado(true);
+  }
+
   const outrosCuidadores = caregivers.filter((c) => !c.principal && c.id !== currentCaregiver?.id);
 
   const secaoAtivaGuia = processo ? SECAO_POR_FASE[processo.faseAtual] : null;
@@ -622,9 +770,14 @@ export default function DesfraldeScreen() {
             })}
 
             <Text style={[styles.resumoLinha, { marginTop: 4 }]}>{mensagemSinais}</Text>
-            {sinaisMarcados < 4 && (
-              <Text style={styles.helper}>Lembrete opcional pra revisar os sinais daqui a algumas semanas.</Text>
-            )}
+            {sinaisMarcados < 4 &&
+              (lembreteSinaisAgendado ? (
+                <Text style={styles.helper}>✓ Lembrete agendado pra daqui a algumas semanas.</Text>
+              ) : (
+                <Pressable onPress={handleLembrarRevisarSinais}>
+                  <Text style={styles.link}>🔔 Lembrar de revisar os sinais daqui a algumas semanas</Text>
+                </Pressable>
+              ))}
 
             <View style={styles.rowButtons}>
               <Pressable style={styles.saveButton} onPress={handleComecarDesfralde}>
@@ -829,6 +982,75 @@ export default function DesfraldeScreen() {
                 <Pressable style={styles.saveButton} onPress={() => setEditandoConfig(false)}>
                   <Text style={styles.saveButtonText}>Pronto</Text>
                 </Pressable>
+              </>
+            )}
+          </View>
+        )}
+
+        {processo && (
+          <View style={[styles.form, { marginTop: 16 }]}>
+            <Text style={styles.sectionTitle}>Lembretes e horários</Text>
+            {!permissaoAtual.podeConfigurar ? (
+              <Text style={styles.helper}>Só quem pode configurar edita os lembretes.</Text>
+            ) : (
+              <>
+                <View style={styles.switchRow}>
+                  <Text style={styles.resumoLinha}>Lembrete de ida ao banheiro</Text>
+                  <Switch
+                    value={!!lembreteBanheiro?.ativo}
+                    onValueChange={handleToggleLembreteBanheiro}
+                  />
+                </View>
+
+                {config?.modoHorario === 'momentos' ? (
+                  <Text style={styles.helper}>
+                    Esse desfralde usa horários por momentos da rotina (configurados acima) — ainda
+                    não dá pra agendar push automático pra isso, só fica como lembrete visual.
+                  </Text>
+                ) : (
+                  <>
+                    <Text style={styles.label}>Janela de horário</Text>
+                    <View style={styles.row}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.helper}>Início</Text>
+                        <HoraInput value={horaInicioForm} onChangeText={setHoraInicioForm} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.helper}>Fim</Text>
+                        <HoraInput value={horaFimForm} onChangeText={setHoraFimForm} />
+                      </View>
+                    </View>
+                  </>
+                )}
+
+                <DiasSemanaSelector value={diasSemanaForm} onChange={setDiasSemanaForm} />
+
+                <CaregiverSelector
+                  label="Quem recebe (neste aparelho)"
+                  caregivers={caregivers}
+                  value={destinatariosForm}
+                  onChange={setDestinatariosForm}
+                />
+                <Text style={styles.helper}>
+                  O push só dispara neste aparelho — um cuidador com o celular dele não recebe
+                  automaticamente enquanto o app não tiver conta compartilhada entre aparelhos.
+                </Text>
+
+                {lembreteBanheiro?.ativo && (
+                  <Pressable style={styles.secondaryButton} onPress={handleSalvarHorariosLembreteBanheiro}>
+                    <Text style={styles.secondaryButtonText}>Atualizar horários do lembrete</Text>
+                  </Pressable>
+                )}
+
+                <View style={styles.divider} />
+
+                <View style={styles.switchRow}>
+                  <Text style={styles.resumoLinha}>Lembrar de revisar a fase a cada 2 semanas</Text>
+                  <Switch
+                    value={!!lembreteRevisarFase?.ativo}
+                    onValueChange={handleToggleLembreteRevisarFase}
+                  />
+                </View>
               </>
             )}
           </View>

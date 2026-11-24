@@ -1,3 +1,5 @@
+import { DiaKey } from './weeklyRoutine';
+
 // Desfralde é rotina, não saúde: nenhum dado daqui entra em analytics, logs,
 // IA, publicidade ou parceiros (ver AGENTS/briefing). Tabelas próprias,
 // separáveis do resto do app de propósito — ver desfraldeStorage.ts.
@@ -122,7 +124,10 @@ export interface DesfraldeLembrete {
   momentos: MomentoRotinaDesfralde[];
   horaInicio: string;
   horaFim: string;
-  diasSemana: number[]; // 0 (domingo) a 6 (sábado)
+  diasSemana: DiaKey[];
+  // Quem deveria receber — só documenta a intenção da família. O app não
+  // tem conta de usuário nem push entre aparelhos hoje, então o lembrete
+  // dispara mesmo é neste aparelho, não no da babá ou da avó.
   destinatarios: string[]; // caregiverIds
   ativo: boolean;
   notificationIds: string[];

@@ -152,6 +152,36 @@ export function picoHorarioEscapes(registros: DesfraldeRegistro[]): FaixaHorario
   return { inicio: indiceMax * 2, fim: indiceMax * 2 + 2, quantidade: porFaixa[indiceMax] };
 }
 
+export interface HorarioLembrete {
+  hour: number;
+  minute: number;
+}
+
+// Horários de um lembrete por intervalo fixo, de horaInicio até horaFim
+// (inclusive), a cada intervaloMin minutos. Fica aqui (não em
+// desfraldeNotifications.ts) pra poder ser testado sem precisar carregar
+// expo-notifications, que não roda bem sob Jest fora de um app nativo real.
+export function calcularHorariosIntervalo(
+  horaInicio: string,
+  horaFim: string,
+  intervaloMin: string,
+): HorarioLembrete[] {
+  const passo = Number(intervaloMin);
+  if (!passo || passo <= 0) return [];
+
+  const [hiH, hiM] = (horaInicio || '08:00').split(':').map(Number);
+  const [hfH, hfM] = (horaFim || '19:00').split(':').map(Number);
+  const inicioMin = (hiH || 0) * 60 + (hiM || 0);
+  const fimMin = (hfH || 0) * 60 + (hfM || 0);
+  if (fimMin < inicioMin) return [];
+
+  const horarios: HorarioLembrete[] = [];
+  for (let m = inicioMin; m <= fimMin; m += passo) {
+    horarios.push({ hour: Math.floor(m / 60) % 24, minute: m % 60 });
+  }
+  return horarios;
+}
+
 export interface PontoEvolucaoSemanal {
   semanaInicio: string;
   percentual: number;

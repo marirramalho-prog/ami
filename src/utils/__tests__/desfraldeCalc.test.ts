@@ -1,5 +1,6 @@
 import { DesfraldeRegistro } from '../../types/desfralde';
 import {
+  calcularHorariosIntervalo,
   escapesPorDia,
   evolucaoIniciativaPedida,
   evolucaoNoitesSecas,
@@ -174,5 +175,40 @@ describe('filtrarRegistros', () => {
 
   it('sem filtro nenhum, retorna tudo', () => {
     expect(filtrarRegistros(registros, {})).toHaveLength(3);
+  });
+});
+
+describe('calcularHorariosIntervalo', () => {
+  it('gera horários do início ao fim, a cada intervalo (padrão 8h-19h a cada 2h)', () => {
+    expect(calcularHorariosIntervalo('08:00', '19:00', '120')).toEqual([
+      { hour: 8, minute: 0 },
+      { hour: 10, minute: 0 },
+      { hour: 12, minute: 0 },
+      { hour: 14, minute: 0 },
+      { hour: 16, minute: 0 },
+      { hour: 18, minute: 0 },
+    ]);
+  });
+
+  it('inclui o horário final quando ele cai exatamente num passo', () => {
+    expect(calcularHorariosIntervalo('08:00', '20:00', '120')).toContainEqual({ hour: 20, minute: 0 });
+  });
+
+  it('lida com minutos não redondos no início', () => {
+    expect(calcularHorariosIntervalo('08:30', '11:30', '60')).toEqual([
+      { hour: 8, minute: 30 },
+      { hour: 9, minute: 30 },
+      { hour: 10, minute: 30 },
+      { hour: 11, minute: 30 },
+    ]);
+  });
+
+  it('retorna lista vazia se o fim for antes do início', () => {
+    expect(calcularHorariosIntervalo('19:00', '08:00', '120')).toEqual([]);
+  });
+
+  it('retorna lista vazia com intervalo inválido', () => {
+    expect(calcularHorariosIntervalo('08:00', '19:00', '0')).toEqual([]);
+    expect(calcularHorariosIntervalo('08:00', '19:00', '')).toEqual([]);
   });
 });
