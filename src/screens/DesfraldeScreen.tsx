@@ -21,6 +21,7 @@ import FadeIn from '../components/FadeIn';
 import ChipSelector from '../components/ChipSelector';
 import HoraInput from '../components/HoraInput';
 import GuiaDesfraldeCard from '../components/GuiaDesfraldeCard';
+import DesfraldePainel from '../components/DesfraldePainel';
 import { Child, childFullName } from '../types/child';
 import { Caregiver } from '../types/caregiver';
 import {
@@ -976,6 +977,12 @@ export default function DesfraldeScreen() {
                   ))}
               </>
             )}
+          </View>
+        )}
+
+        {processo && permissaoAtual.podeVer && (
+          <View style={{ marginTop: 16 }}>
+            <DesfraldePainel registros={registrosDoProcesso} caregivers={caregivers} />
           </View>
         )}
 
