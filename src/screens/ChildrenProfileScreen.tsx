@@ -27,6 +27,7 @@ import AtividadesEditor, { resumoDias } from '../components/AtividadesEditor';
 import DateFields from '../components/DateFields';
 import FadeIn from '../components/FadeIn';
 import { syncChecklistsForAllChildren, removeChecklistsForChild } from '../utils/checklistSync';
+import { removeDesfraldeForChild } from '../storage/desfraldeStorage';
 import { confirmAction } from '../utils/confirm';
 
 const TURNO_LABEL: Record<Exclude<Turno, ''>, string> = {
@@ -130,6 +131,7 @@ export default function ChildrenProfileScreen() {
         setChildren(updated);
         await saveChildren(updated);
         await removeChecklistsForChild(id);
+        await removeDesfraldeForChild(id);
         if (editingId === id) handleCancelEdit();
       },
     );
