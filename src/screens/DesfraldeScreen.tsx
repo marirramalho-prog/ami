@@ -83,6 +83,10 @@ import {
   proximaReferencia,
 } from '../utils/desfraldeRelatorio';
 import { compartilharTexto } from '../utils/desfraldeShare';
+import { AgendaEvent, ChecklistTemplate } from '../types/routine';
+import { loadChecklists, loadEvents, saveChecklists, saveEvents } from '../storage/routineStorage';
+import { idEventoInicioDesfralde, montarEventoInicioDesfralde } from '../utils/desfraldeAgenda';
+import { idChecklistSacolaDesfralde, montarChecklistSacolaDesfralde } from '../data/checklistSacolaDesfralde';
 
 const FASES: { valor: FaseDesfralde; label: string }[] = [
   { valor: 'preparar', label: 'Preparar' },
@@ -218,6 +222,8 @@ export default function DesfraldeScreen() {
   const [conquistas, setConquistas] = useState<DesfraldeConquista[]>([]);
   const [permissoes, setPermissoes] = useState<DesfraldePermissao[]>([]);
   const [lembretes, setLembretes] = useState<DesfraldeLembrete[]>([]);
+  const [eventosAgenda, setEventosAgenda] = useState<AgendaEvent[]>([]);
+  const [checklists, setChecklists] = useState<ChecklistTemplate[]>([]);
 
   const [diasSemanaForm, setDiasSemanaForm] = useState<DiaKey[]>(['seg', 'ter', 'qua', 'qui', 'sex']);
   const [destinatariosForm, setDestinatariosForm] = useState<string[]>([]);
@@ -255,6 +261,8 @@ export default function DesfraldeScreen() {
         loadConquistas(),
         loadPermissoes(),
         loadLembretes(),
+        loadEvents(),
+        loadChecklists(),
       ]).then(
         ([
           childList,
@@ -266,6 +274,8 @@ export default function DesfraldeScreen() {
           conquistaList,
           permissaoList,
           lembreteList,
+          eventoList,
+          checklistList,
         ]) => {
         setChildren(childList);
         setCaregivers(caregiverList);
@@ -276,6 +286,8 @@ export default function DesfraldeScreen() {
         setConquistas(conquistaList);
         setPermissoes(permissaoList);
         setLembretes(lembreteList);
+        setEventosAgenda(eventoList);
+        setChecklists(checklistList);
         const childIdDaRota = route.params?.childId;
         setChildId((prev) => {
           if (childIdDaRota && childList.some((c) => c.id === childIdDaRota)) return childIdDaRota;
@@ -741,6 +753,34 @@ export default function DesfraldeScreen() {
     });
     const resultado = await compartilharTexto(`Resumo do desfralde — ${childFullName(child)}`, texto);
     if (resultado === 'copiado') Alert.alert('Resumo copiado', 'Cole onde quiser compartilhar.');
+  }
+
+  const eventoInicioExiste = !!processo && eventosAgenda.some((e) => e.id === idEventoInicioDesfralde(processo.id));
+
+  async function handleCriarEventoInicioAgenda() {
+    if (!processo || !childId) return;
+    const evento = montarEventoInicioDesfralde(processo.id, childId, new Date(processo.iniciadoEm || Date.now()));
+    const lista = [...eventosAgenda, evento];
+    setEventosAgenda(lista);
+    await saveEvents(lista);
+  }
+
+  const checklistSacola = childId
+    ? checklists.find((c) => c.id === idChecklistSacolaDesfralde(childId))
+    : undefined;
+
+  async function handleAbrirChecklistSacola() {
+    if (!childId) return;
+    if (checklistSacola) {
+      navigation.navigate('Checklist', { highlightId: checklistSacola.id });
+      return;
+    }
+    if (!child) return;
+    const novoChecklist = montarChecklistSacolaDesfralde(childId, childFullName(child));
+    const lista = [...checklists, novoChecklist];
+    setChecklists(lista);
+    await saveChecklists(lista);
+    navigation.navigate('Checklist', { highlightId: novoChecklist.id });
   }
 
   const outrosCuidadores = caregivers.filter((c) => !c.principal && c.id !== currentCaregiver?.id);
@@ -1300,6 +1340,30 @@ export default function DesfraldeScreen() {
             </Text>
             <Pressable style={styles.secondaryButton} onPress={handleCompartilharResumo} accessibilityRole="button">
               <Text style={styles.secondaryButtonText}>🎒 Compartilhar resumo pra escola/babá</Text>
+            </Pressable>
+          </View>
+        )}
+
+        {processo && (
+          <View style={[styles.form, { marginTop: 16 }]}>
+            <Text style={styles.sectionTitle}>Agenda e checklist</Text>
+
+            {eventoInicioExiste ? (
+              <Text style={styles.helper}>✓ Evento "Início do desfralde" já está na agenda.</Text>
+            ) : (
+              <Pressable
+                style={styles.secondaryButton}
+                onPress={handleCriarEventoInicioAgenda}
+                accessibilityRole="button"
+              >
+                <Text style={styles.secondaryButtonText}>📅 Marcar início na agenda</Text>
+              </Pressable>
+            )}
+
+            <Pressable style={styles.secondaryButton} onPress={handleAbrirChecklistSacola} accessibilityRole="button">
+              <Text style={styles.secondaryButtonText}>
+                {checklistSacola ? '🎒 Abrir checklist da sacola do desfralde' : '🎒 Criar checklist da sacola do desfralde'}
+              </Text>
             </Pressable>
           </View>
         )}
