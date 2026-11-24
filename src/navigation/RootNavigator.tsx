@@ -12,6 +12,7 @@ import DiscoverScreen from '../screens/DiscoverScreen';
 import StoriesScreen from '../screens/StoriesScreen';
 import SleepScreen from '../screens/SleepScreen';
 import CareScreen from '../screens/CareScreen';
+import DesfraldeScreen from '../screens/DesfraldeScreen';
 import AssistantScreen from '../screens/AssistantScreen';
 
 const Tab = createBottomTabNavigator();
@@ -25,6 +26,7 @@ const ICONS: Record<string, string> = {
   Histórias: '📖',
   Sono: '🌙',
   Cuidados: '🩺',
+  Desfralde: '🧻',
 };
 
 // Rótulos exibidos na barra de abas — abreviados só onde o nome
@@ -54,6 +56,7 @@ const linking: LinkingOptions<any> = {
       Histórias: 'Histórias',
       Sono: 'Sono',
       Cuidados: 'Cuidados',
+      Desfralde: 'Desfralde',
     },
   },
 };
@@ -96,6 +99,14 @@ export default function RootNavigator() {
         <Tab.Screen name="Histórias" component={StoriesScreen} />
         <Tab.Screen name="Sono" component={SleepScreen} />
         <Tab.Screen name="Cuidados" component={CareScreen} />
+        {/* Sem botão na barra de propósito: a barra já tem 9 abas (ux-backlog.md
+            #25) e o briefing pede entrada por cartão no perfil do filho, não
+            por aba nova — chegada aqui é só por navigation.navigate('Desfralde'). */}
+        <Tab.Screen
+          name="Desfralde"
+          component={DesfraldeScreen}
+          options={{ tabBarButton: () => null, tabBarItemStyle: { display: 'none' } }}
+        />
       </Tab.Navigator>
     </NavigationContainer>
   );

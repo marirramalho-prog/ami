@@ -11,7 +11,7 @@ import {
   Platform,
   Image,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Colors } from '../theme/colors';
 import { useThemeColors } from '../theme/useThemeColors';
 import { typography } from '../theme/typography';
@@ -19,7 +19,7 @@ import mascoteIcon from '../../assets/mascote/avatar-circular-bust.png';
 import { Child, childFullName, Turno } from '../types/child';
 import { AtividadeExtracurricular } from '../types/weeklyRoutine';
 import { loadChildren, saveChildren } from '../storage/childrenStorage';
-import { calcularIdade, isValidDatePart } from '../utils/date';
+import { calcularIdade, calcularIdadeEmMeses, isValidDatePart } from '../utils/date';
 import TagInput from '../components/TagInput';
 import AvatarPicker, { AVATAR_OPTIONS } from '../components/AvatarPicker';
 import TurnoSelector from '../components/TurnoSelector';
@@ -53,6 +53,7 @@ const emptyForm = {
 export default function ChildrenProfileScreen() {
   const colors = useThemeColors();
   const styles = useMemo(() => getStyles(colors), [colors]);
+  const navigation = useNavigation<any>();
   const [children, setChildren] = useState<Child[]>([]);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -162,6 +163,8 @@ export default function ChildrenProfileScreen() {
           contentContainerStyle={styles.list}
           renderItem={({ item }) => {
             const idade = calcularIdade(item.dataNascimento);
+            const idadeMeses = calcularIdadeEmMeses(item.dataNascimento);
+            const mostrarCartaoDesfralde = idadeMeses !== null && idadeMeses >= 12 && idadeMeses <= 72;
             const turnoLabel = item.turnoEscolar ? TURNO_LABEL[item.turnoEscolar] : '';
             const escolaLabel = item.naoVaiEscola ? 'Não vai à escola' : item.escola;
             return (
@@ -183,6 +186,17 @@ export default function ChildrenProfileScreen() {
                     <Text style={styles.remove}>remover</Text>
                   </Pressable>
                 </View>
+
+                {mostrarCartaoDesfralde && (
+                  <Pressable
+                    style={styles.cartaoDesfralde}
+                    onPress={() => navigation.navigate('Desfralde', { childId: item.id })}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Abrir Desfralde de ${childFullName(item)}`}
+                  >
+                    <Text style={styles.cartaoDesfraldeTexto}>🧻 Desfralde</Text>
+                  </Pressable>
+                )}
 
                 {item.atividades.length > 0 && (
                   <Text style={styles.cardTags}>
@@ -473,6 +487,16 @@ function getStyles(colors: Colors) {
     fontSize: 12,
     color: colors.textMuted,
   },
+  cartaoDesfralde: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.azulGelo,
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    minHeight: 32,
+    justifyContent: 'center',
+  },
+  cartaoDesfraldeTexto: { fontSize: 12, color: colors.text, fontWeight: '600' },
   remove: {
     color: colors.textMuted,
     fontSize: 12,

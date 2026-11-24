@@ -39,6 +39,21 @@ export function calcularIdade({ dia, mes, ano }: DatePart): number | null {
   return idade >= 0 ? idade : null;
 }
 
+// Em meses, pra faixas etárias mais finas que calcularIdade (anos) permite
+// — ex.: o cartão de Desfralde só aparece entre 12 meses e 6 anos.
+export function calcularIdadeEmMeses({ dia, mes, ano }: DatePart): number | null {
+  if (!isValidDatePart({ dia, mes, ano })) return null;
+
+  const nascimento = new Date(Number(ano), Number(mes) - 1, Number(dia));
+  const hoje = new Date();
+
+  let meses = (hoje.getFullYear() - nascimento.getFullYear()) * 12;
+  meses += hoje.getMonth() - nascimento.getMonth();
+  if (hoje.getDate() < nascimento.getDate()) meses -= 1;
+
+  return meses >= 0 ? meses : null;
+}
+
 export function dateKey(date: Date): string {
   const mm = String(date.getMonth() + 1).padStart(2, '0');
   const dd = String(date.getDate()).padStart(2, '0');
