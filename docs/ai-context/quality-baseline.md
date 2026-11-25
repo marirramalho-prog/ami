@@ -8,10 +8,14 @@ O que existe de fato pra validar uma mudança, hoje (2026-11-10). Ver `tech-stac
 - **TypeScript**: `tsconfig.json` existe, então erros de tipo aparecem no editor/build, mas não há script dedicado (`npm run typecheck` não existe hoje).
 - **Git**: histórico completo de commits na branch `ami`, permite comparar antes/depois e reverter.
 
+## Disponível (atualizado em 2026-11-25)
+
+- **Testes automatizados (unitários)**: Jest configurado (`jest-expo`, `npm test`), com suítes em `src/**/__tests__/` cobrindo principalmente a lógica de desfralde (`desfraldeCalc`, `desfraldeElegibilidade`, `desfraldeAgenda`, `desfraldePermissoes`, `desfraldeRelatorio`) e `desfraldeStorage`. Não cobre UI/componentes visuais — não serve pra validar mudança de UX.
+
 ## Não disponível (não inventar)
 
 - Lint (ESLint/Prettier): não configurado.
-- Testes automatizados (unitários, componente, E2E): não configurado, nenhuma dependência de teste no `package.json`.
+- Testes de componente/E2E: não configurado.
 - Comparação visual automatizada (screenshot diff): não configurado — comparação antes/depois é manual, por captura de tela.
 - CI: não verificado ainda se existe pipeline.
 
