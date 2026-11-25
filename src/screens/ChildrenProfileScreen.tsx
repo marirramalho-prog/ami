@@ -11,22 +11,26 @@ import {
   Platform,
   Image,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Colors } from '../theme/colors';
 import { useThemeColors } from '../theme/useThemeColors';
 import { typography } from '../theme/typography';
 import mascoteIcon from '../../assets/mascote/avatar-circular-bust.png';
-import { Child, childFullName, Turno } from '../types/child';
+import { Child, childFullName, childUsaFralda, Turno } from '../types/child';
 import { AtividadeExtracurricular } from '../types/weeklyRoutine';
 import { loadChildren, saveChildren } from '../storage/childrenStorage';
-import { calcularIdade, isValidDatePart } from '../utils/date';
+import { calcularIdade, calcularIdadeEmMeses, isValidDatePart } from '../utils/date';
 import TagInput from '../components/TagInput';
 import AvatarPicker, { AVATAR_OPTIONS } from '../components/AvatarPicker';
 import TurnoSelector from '../components/TurnoSelector';
 import AtividadesEditor, { resumoDias } from '../components/AtividadesEditor';
+import ChipSelector from '../components/ChipSelector';
 import DateFields from '../components/DateFields';
 import FadeIn from '../components/FadeIn';
 import { syncChecklistsForAllChildren, removeChecklistsForChild } from '../utils/checklistSync';
+import { loadProcessos, removeDesfraldeForChild } from '../storage/desfraldeStorage';
+import { DesfraldeProcesso } from '../types/desfralde';
+import { mostrarEntradaDesfralde } from '../utils/desfraldeElegibilidade';
 import { confirmAction } from '../utils/confirm';
 
 const TURNO_LABEL: Record<Exclude<Turno, ''>, string> = {
@@ -43,6 +47,7 @@ const emptyForm = {
   avatar: AVATAR_OPTIONS[0],
   escola: '',
   naoVaiEscola: false,
+  usaFralda: true,
   turnoEscolar: '' as Turno,
   atividades: [] as AtividadeExtracurricular[],
   interesses: [] as string[],
@@ -52,13 +57,16 @@ const emptyForm = {
 export default function ChildrenProfileScreen() {
   const colors = useThemeColors();
   const styles = useMemo(() => getStyles(colors), [colors]);
+  const navigation = useNavigation<any>();
   const [children, setChildren] = useState<Child[]>([]);
+  const [processos, setProcessos] = useState<DesfraldeProcesso[]>([]);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
       loadChildren().then(setChildren);
+      loadProcessos().then(setProcessos);
     }, []),
   );
 
@@ -80,6 +88,7 @@ export default function ChildrenProfileScreen() {
       avatar: child.avatar,
       escola: child.escola,
       naoVaiEscola: child.naoVaiEscola,
+      usaFralda: childUsaFralda(child),
       turnoEscolar: child.turnoEscolar,
       atividades: child.atividades,
       interesses: child.interesses,
@@ -103,6 +112,7 @@ export default function ChildrenProfileScreen() {
       avatar: form.avatar,
       escola: form.escola.trim(),
       naoVaiEscola: form.naoVaiEscola,
+      usaFralda: form.usaFralda,
       turnoEscolar: form.turnoEscolar,
       atividades: form.atividades,
       interesses: form.interesses,
@@ -130,6 +140,7 @@ export default function ChildrenProfileScreen() {
         setChildren(updated);
         await saveChildren(updated);
         await removeChecklistsForChild(id);
+        await removeDesfraldeForChild(id);
         if (editingId === id) handleCancelEdit();
       },
     );
@@ -160,6 +171,10 @@ export default function ChildrenProfileScreen() {
           contentContainerStyle={styles.list}
           renderItem={({ item }) => {
             const idade = calcularIdade(item.dataNascimento);
+            const idadeMeses = calcularIdadeEmMeses(item.dataNascimento);
+            const jaTemProcessoDesfralde = processos.some((p) => p.childId === item.id);
+            const mostrarCartaoDesfralde =
+              childUsaFralda(item) && mostrarEntradaDesfralde(idadeMeses, jaTemProcessoDesfralde);
             const turnoLabel = item.turnoEscolar ? TURNO_LABEL[item.turnoEscolar] : '';
             const escolaLabel = item.naoVaiEscola ? 'Não vai à escola' : item.escola;
             return (
@@ -181,6 +196,17 @@ export default function ChildrenProfileScreen() {
                     <Text style={styles.remove}>remover</Text>
                   </Pressable>
                 </View>
+
+                {mostrarCartaoDesfralde && (
+                  <Pressable
+                    style={styles.cartaoDesfralde}
+                    onPress={() => navigation.navigate('Desfralde', { childId: item.id })}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Abrir Desfralde de ${childFullName(item)}`}
+                  >
+                    <Text style={styles.cartaoDesfraldeTexto}>🧻 Desfralde</Text>
+                  </Pressable>
+                )}
 
                 {item.atividades.length > 0 && (
                   <Text style={styles.cardTags}>
@@ -247,6 +273,18 @@ export default function ChildrenProfileScreen() {
 
           <View style={styles.divider} />
           <Text style={styles.sectionTitle}>Contexto de rotina</Text>
+
+          <ChipSelector
+            label="Usa fralda?"
+            options={['Sim', 'Não']}
+            value={form.usaFralda ? 'Sim' : 'Não'}
+            onChange={(v) => updateForm('usaFralda', v !== 'Não')}
+          />
+          {!form.usaFralda && (
+            <Text style={styles.helper}>
+              Marcando "Não", o Desfralde não aparece mais pra este perfil, em nenhuma tela.
+            </Text>
+          )}
 
           {!form.naoVaiEscola && (
             <TextInput
@@ -471,6 +509,16 @@ function getStyles(colors: Colors) {
     fontSize: 12,
     color: colors.textMuted,
   },
+  cartaoDesfralde: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.azulGelo,
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    minHeight: 32,
+    justifyContent: 'center',
+  },
+  cartaoDesfraldeTexto: { fontSize: 12, color: colors.text, fontWeight: '600' },
   remove: {
     color: colors.textMuted,
     fontSize: 12,
