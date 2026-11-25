@@ -21,10 +21,11 @@ import FadeIn from '../components/FadeIn';
 import ChipSelector from '../components/ChipSelector';
 import HoraInput from '../components/HoraInput';
 import GuiaDesfraldeCard from '../components/GuiaDesfraldeCard';
+import DateFields from '../components/DateFields';
 import DesfraldePainel from '../components/DesfraldePainel';
 import DiasSemanaSelector from '../components/DiasSemanaSelector';
 import CaregiverSelector from '../components/CaregiverSelector';
-import { Child, childFullName } from '../types/child';
+import { Child, childFullName, childUsaFralda } from '../types/child';
 import { Caregiver } from '../types/caregiver';
 import { DiaKey } from '../types/weeklyRoutine';
 import {
@@ -74,7 +75,8 @@ import {
   agendarLembreteRevisarSinais,
   cancelarNotificacoes,
 } from '../utils/desfraldeNotifications';
-import { todayKey } from '../utils/date';
+import { calcularIdadeEmMeses, datePartToKey, isValidDatePart, todayKey } from '../utils/date';
+import { DISCLAIMER_IDADE_DESFRALDE, elegivelParaIniciarDesfralde } from '../utils/desfraldeElegibilidade';
 import {
   calcularPeriodoRelatorio,
   montarTextoRelatorio,
@@ -231,6 +233,11 @@ export default function DesfraldeScreen() {
   const [horaFimForm, setHoraFimForm] = useState('19:00');
   const [lembreteSinaisAgendado, setLembreteSinaisAgendado] = useState(false);
 
+  const [editandoConquistaTipo, setEditandoConquistaTipo] = useState<TipoConquistaDesfralde | null>(null);
+  const [diaConquistaForm, setDiaConquistaForm] = useState('');
+  const [mesConquistaForm, setMesConquistaForm] = useState('');
+  const [anoConquistaForm, setAnoConquistaForm] = useState('');
+
   const [periodoRelatorio, setPeriodoRelatorio] = useState<PeriodoRelatorio>('semana');
   const [referenciaRelatorio, setReferenciaRelatorio] = useState(new Date());
 
@@ -298,6 +305,10 @@ export default function DesfraldeScreen() {
   );
 
   const child = children.find((c) => c.id === childId) || null;
+  const usaFraldaChild = child ? childUsaFralda(child) : true;
+  const temAlgumProcesso = useMemo(() => processos.some((p) => p.childId === childId), [processos, childId]);
+  const elegivelDesfralde =
+    temAlgumProcesso || elegivelParaIniciarDesfralde(child ? calcularIdadeEmMeses(child.dataNascimento) : null);
 
   const processo = useMemo(
     () =>
@@ -619,6 +630,32 @@ export default function DesfraldeScreen() {
     await saveConquistas(lista);
   }
 
+  function handleIniciarEdicaoDataConquista(conquista: DesfraldeConquista) {
+    const [ano, mes, dia] = conquista.data.split('-');
+    setEditandoConquistaTipo(conquista.tipo);
+    setDiaConquistaForm(dia || '');
+    setMesConquistaForm(mes || '');
+    setAnoConquistaForm(ano || '');
+  }
+
+  function handleCancelarEdicaoDataConquista() {
+    setEditandoConquistaTipo(null);
+  }
+
+  // Data registrada automaticamente no dia em que a conquista é marcada
+  // (handleToggleConquista) — mas o cuidador às vezes só percebe e registra
+  // dias depois do que realmente aconteceu, então a data fica editável aqui.
+  async function handleSalvarDataConquista(tipo: TipoConquistaDesfralde) {
+    if (!isValidDatePart({ dia: diaConquistaForm, mes: mesConquistaForm, ano: anoConquistaForm })) return;
+    const novaData = datePartToKey({ dia: diaConquistaForm, mes: mesConquistaForm, ano: anoConquistaForm });
+    const lista = conquistas.map((c) =>
+      c.tipo === tipo && c.processoId === processo?.id ? { ...c, data: novaData } : c,
+    );
+    setConquistas(lista);
+    await saveConquistas(lista);
+    setEditandoConquistaTipo(null);
+  }
+
   async function persistLembrete(atualizado: DesfraldeLembrete) {
     const outros = lembretes.filter((l) => l.id !== atualizado.id);
     const lista = [...outros, atualizado];
@@ -831,9 +868,36 @@ export default function DesfraldeScreen() {
           })}
         </View>
 
+        {child && !usaFraldaChild && (
+          <View style={styles.form}>
+            <Text style={styles.sectionTitle}>Desfralde não habilitado</Text>
+            <Text style={styles.resumoLinha}>
+              O perfil de {childFullName(child)} está marcado como "Não usa fralda". Pra habilitar o Desfralde,
+              mude isso no cadastro do perfil.
+            </Text>
+            <Pressable onPress={() => navigation.navigate('Perfis')} accessibilityRole="button">
+              <Text style={[styles.link, { marginTop: 4 }]}>👶 ir para Perfis</Text>
+            </Pressable>
+          </View>
+        )}
+
+        {child && usaFraldaChild && !processo && !elegivelDesfralde && (
+          <View style={styles.form}>
+            <Text style={styles.sectionTitle}>Ainda não chegou a hora</Text>
+            <Text style={styles.resumoLinha}>
+              A gente mostra os sinais de prontidão e o guia quando {childFullName(child)} chegar na idade que os
+              pediatras costumam sugerir pra começar a pensar nisso.
+            </Text>
+            <Text style={styles.helper}>{DISCLAIMER_IDADE_DESFRALDE}</Text>
+          </View>
+        )}
+
+        {child && usaFraldaChild && (!!processo || elegivelDesfralde) && (
+          <>
         {!processo && !lerGuiaSemProcesso && (
           <View style={styles.form}>
             <Text style={styles.sectionTitle}>Sinais de prontidão</Text>
+            <Text style={styles.helper}>{DISCLAIMER_IDADE_DESFRALDE}</Text>
             <Text style={styles.helper}>
               Marque o que já apareceu. Não é teste e não dá nota — pode revisar quando quiser.
             </Text>
@@ -1373,25 +1437,55 @@ export default function DesfraldeScreen() {
             <Text style={styles.sectionTitle}>Conquistas</Text>
             {TODAS_CONQUISTAS.map((tipo) => {
               const registrada = conquistasDoProcesso.find((c) => c.tipo === tipo);
+              const editandoData = !!registrada && editandoConquistaTipo === tipo;
               return (
-                <Pressable
-                  key={tipo}
-                  style={styles.sinalRow}
-                  onPress={() => handleToggleConquista(tipo)}
-                  disabled={!!registrada && !ehResponsavelPrincipal}
-                >
-                  <View style={[styles.checkbox, !!registrada && styles.checkboxChecked]}>
-                    {registrada && <Text style={styles.checkmark}>✓</Text>}
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.passoText}>{LABEL_CONQUISTA[tipo]}</Text>
-                    {registrada && (
-                      <Text style={styles.helper}>
-                        {formatarDataBR(registrada.data)}
-                      </Text>
+                <React.Fragment key={tipo}>
+                  <View style={styles.sinalRow}>
+                    <Pressable
+                      style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 44 }}
+                      onPress={() => handleToggleConquista(tipo)}
+                      disabled={!!registrada && !ehResponsavelPrincipal}
+                    >
+                      <View style={[styles.checkbox, !!registrada && styles.checkboxChecked]}>
+                        {registrada && <Text style={styles.checkmark}>✓</Text>}
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.passoText}>{LABEL_CONQUISTA[tipo]}</Text>
+                        {registrada && !editandoData && (
+                          <Text style={styles.helper}>{formatarDataBR(registrada.data)}</Text>
+                        )}
+                      </View>
+                    </Pressable>
+                    {registrada && !editandoData && (
+                      <Pressable onPress={() => handleIniciarEdicaoDataConquista(registrada)}>
+                        <Text style={styles.edit}>editar data</Text>
+                      </Pressable>
                     )}
                   </View>
-                </Pressable>
+                  {editandoData && (
+                    <View style={{ marginLeft: 30, gap: 8, marginBottom: 4 }}>
+                      <DateFields
+                        dia={diaConquistaForm}
+                        mes={mesConquistaForm}
+                        ano={anoConquistaForm}
+                        onChangeDia={setDiaConquistaForm}
+                        onChangeMes={setMesConquistaForm}
+                        onChangeAno={setAnoConquistaForm}
+                      />
+                      {!isValidDatePart({ dia: diaConquistaForm, mes: mesConquistaForm, ano: anoConquistaForm }) && (
+                        <Text style={styles.warning}>Data incompleta ou inválida.</Text>
+                      )}
+                      <View style={styles.rowButtons}>
+                        <Pressable style={styles.saveButton} onPress={() => handleSalvarDataConquista(tipo)}>
+                          <Text style={styles.saveButtonText}>Salvar data</Text>
+                        </Pressable>
+                        <Pressable style={styles.secondaryButton} onPress={handleCancelarEdicaoDataConquista}>
+                          <Text style={styles.secondaryButtonText}>Cancelar</Text>
+                        </Pressable>
+                      </View>
+                    </View>
+                  )}
+                </React.Fragment>
               );
             })}
           </View>
@@ -1461,6 +1555,8 @@ export default function DesfraldeScreen() {
             />
           ))}
         </View>
+          </>
+        )}
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -1571,5 +1667,6 @@ function getStyles(colors: Colors) {
     navRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 20 },
     navSeta: { fontSize: 16, color: colors.text, paddingHorizontal: 8 },
     navLabel: { fontSize: 14, fontWeight: '700', color: colors.text, textTransform: 'capitalize' },
+    warning: { fontSize: 12, color: '#B5555A' },
   });
 }

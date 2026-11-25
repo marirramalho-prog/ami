@@ -54,6 +54,13 @@ export function calcularIdadeEmMeses({ dia, mes, ano }: DatePart): number | null
   return meses >= 0 ? meses : null;
 }
 
+// Converte um DatePart (já validado com isValidDatePart) direto pra
+// 'YYYY-MM-DD', sem passar por Date — evita o fuso horário virar o dia
+// (mesma armadilha de new Date('YYYY-MM-DD') documentada em dateKey/todayKey).
+export function datePartToKey({ dia, mes, ano }: DatePart): string {
+  return `${ano.padStart(4, '0')}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+}
+
 export function dateKey(date: Date): string {
   const mm = String(date.getMonth() + 1).padStart(2, '0');
   const dd = String(date.getDate()).padStart(2, '0');
