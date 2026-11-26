@@ -1,6 +1,6 @@
 # Inventário de telas — Âmi
 
-Navegação: uma única barra de abas (`src/navigation/RootNavigator.tsx`, `createBottomTabNavigator`), sem navigators aninhados. 9 telas, todas verificadas visualmente no preview web em 2026-11-10 (estado vazio, sem dados cadastrados).
+Navegação: uma única barra de abas (`src/navigation/RootNavigator.tsx`, `createBottomTabNavigator`), sem navigators aninhados. 9 abas fixas, todas verificadas visualmente no preview web em 2026-11-10 (estado vazio, sem dados cadastrados). Há uma 10ª tela fora da barra de abas (ver abaixo), achada só na auditoria-delta de 2026-11-25 — não verificada visualmente ainda.
 
 | Tela (rota) | Arquivo | Função principal | Linhas | Estado observado |
 |---|---|---|---|---|
@@ -13,6 +13,7 @@ Navegação: uma única barra de abas (`src/navigation/RootNavigator.tsx`, `crea
 | Histórias (`/Histórias`) | [StoriesScreen.tsx](../../src/screens/StoriesScreen.tsx) | Gerador de histórias por IA | 563 | ✅ Formulário completo; geração real não testada |
 | Sono (`/Sono`) | [SleepScreen.tsx](../../src/screens/SleepScreen.tsx) | Rotina e registro diário de sono | 769 | ⚠️ Bloqueada sem filho cadastrado (tela vazia, sem CTA pra resolver) |
 | Cuidados (`/Cuidados`) | [CareScreen.tsx](../../src/screens/CareScreen.tsx) | Calendário de vacina/puericultura | 261 | ⚠️ Bloqueada sem filho cadastrado (mesma trava) |
+| Desfralde (sem aba — só `navigation.navigate('Desfralde')`) | [DesfraldeScreen.tsx](../../src/screens/DesfraldeScreen.tsx) | Guia e acompanhamento de desfralde | 1672 | (pendente) — não verificada visualmente ainda, achada só por grep na auditoria-delta de 2026-11-25. **Checar guardrail de marca**: tema de desenvolvimento infantil, não "médico" no sentido estrito do `product-brief.md`, mas vale confirmar com a Mari se está dentro do escopo antes de auditar a fundo |
 
 ## Componentes reutilizados (`src/components/`)
 
